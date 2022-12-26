@@ -2,9 +2,6 @@
 
 #include "Types/Object.h"
 
-#define PZL_INT_OPERATOR_OVERLOADING(Op, Type) inline BasicInt<T>& operator ##Op(Type A) { this->_Data ##Op A; return *this; }
-#define PZL_INT_OPERATOR_OVERLOADING_NO_RIGHT(Op) inline BasicInt<T>& operator ##Op() { this->_Data ##Op; return *this; }
-
 namespace PZL::Type
 {
 
@@ -13,9 +10,6 @@ namespace PZL::Type
 	struct BasicInt : public Object<const char*>
 	{
 	public:
-		using value_type = T;
-	public:
-
 		BasicInt() : _Data(0)
 		{
 		}
@@ -37,58 +31,46 @@ namespace PZL::Type
 			return NStr;
 		}
 
-		inline BasicInt<T> operator+(BasicInt<T>& A)
+		template<typename Type>
+		BasicInt<T>& operator+=(Type A)
 		{
-			BasicInt<T> B(this->_Data + A._Data);
-			return B;
-		}
-
-		inline BasicInt<T> operator+(int32_t A)
-		{
-			BasicInt<T> B(this->_Data + A);
-			return B;
-		}
-
-		inline BasicInt<T> operator+(uint32_t A)
-		{
-			BasicInt<T> B(this->_Data + A);
-			return B;
-		}
-
-		inline BasicInt<T> operator+(int64_t A)
-		{
-			BasicInt<T> B(this->_Data + A);
-			return B;
-		}
-
-		inline BasicInt<T> operator+(uint64_t A)
-		{
-			BasicInt<T> B(this->_Data + A);
-			return B;
-		}
-
-		inline BasicInt<T>& operator+=(BasicInt<T>& A)
-		{
-			this->_Data += A._Data;
+			this->_Data += A;
 			return *this;
 		}
 
-		PZL_INT_OPERATOR_OVERLOADING(-=, uint8_t);
-		PZL_INT_OPERATOR_OVERLOADING(-=, int8_t);
-		PZL_INT_OPERATOR_OVERLOADING(-=, int32_t);
-		PZL_INT_OPERATOR_OVERLOADING(-=, uint32_t);
-		PZL_INT_OPERATOR_OVERLOADING(-=, int64_t);
-		PZL_INT_OPERATOR_OVERLOADING(-=, uint64_t);
+		template<typename Type>
+		BasicInt<T>& operator-=(Type A)
+		{
+			this->_Data -= A;
+			return *this;
+		}
 
-		PZL_INT_OPERATOR_OVERLOADING(+=, uint8_t);
-		PZL_INT_OPERATOR_OVERLOADING(+=, int8_t);
-		PZL_INT_OPERATOR_OVERLOADING(+=, int32_t);
-		PZL_INT_OPERATOR_OVERLOADING(+=, uint32_t);
-		PZL_INT_OPERATOR_OVERLOADING(+=, int64_t);
-		PZL_INT_OPERATOR_OVERLOADING(+=, uint64_t);
+		template<typename Type>
+		BasicInt<T>& operator*=(Type A)
+		{
+			this->_Data *= A;
+			return *this;
+		}
 
+		template<typename Type>
+		BasicInt<T>& operator/=(Type A)
+		{
+			this->_Data /= A;
+			return *this;
+		}
 
-		PZL_INT_OPERATOR_OVERLOADING_NO_RIGHT(++);
+		template<typename Type>
+		BasicInt<T>& operator%=(Type A)
+		{
+			this->_Data %= A;
+			return *this;
+		}
+
+		inline BasicInt<T>& operator++()
+		{ 
+			this->_Data++;
+			return *this;
+		}
 
 		inline BasicInt<T> operator++(int)
 		{
