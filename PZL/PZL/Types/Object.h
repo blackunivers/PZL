@@ -11,12 +11,13 @@ namespace PZL
 	};
 
 	// Represents an object
+	template<typename TTS = const char*>
 	struct Object
 	{
 		// Object Type
 		ObjectType Type;
 
 		// Returns the object as a string
-		virtual const char* ToString() const = 0;
+		virtual TTS ToString() const = 0;
 	};
 }
