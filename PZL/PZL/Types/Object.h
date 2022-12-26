@@ -15,7 +15,7 @@ namespace PZL
 	struct Object
 	{
 		// Object Type
-		ObjectType Type;
+		ObjectType OType;
 
 		// Returns the object as a string
 		virtual TTS ToString() const = 0;

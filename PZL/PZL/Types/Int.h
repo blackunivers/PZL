@@ -12,14 +12,17 @@ namespace PZL::Type
 	public:
 		BasicInt() : _Data(0)
 		{
+			OType = ObjectType::Int;
 		}
 
 		BasicInt(const T& Value) : _Data(Value)
 		{
+			OType = ObjectType::Int;
 		}
 
 		BasicInt(T&& Value) : _Data(Value)
 		{
+			OType = ObjectType::Int;
 		}
 
 		// Returns its current value as a string
