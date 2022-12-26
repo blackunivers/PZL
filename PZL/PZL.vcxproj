@@ -173,14 +173,21 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PCH.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="PZL\Types\Int.cpp" />
+    <ClCompile Include="PZL\Lexer\Lexer.cpp" />
+    <ClCompile Include="PZL\System\Memory.cpp" />
+    <ClCompile Include="PZL\Types\Bool.cpp" />
     <ClCompile Include="src\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\PCH.h" />
+    <ClInclude Include="PZL\Lexer\Lexer.h" />
     <ClInclude Include="PZL\PZL.h" />
+    <ClInclude Include="PZL\System\Memory.h" />
+    <ClInclude Include="PZL\Types\Base.h" />
+    <ClInclude Include="PZL\Types\Bool.h" />
     <ClInclude Include="PZL\Types\Int.h" />
     <ClInclude Include="PZL\Types\Object.h" />
+    <ClInclude Include="PZL\Types\Size.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
