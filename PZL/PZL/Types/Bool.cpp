@@ -24,7 +24,7 @@ namespace PZL::Type
 		return _Data ? "true" : "false";
 	}
 
-	Bool::operator bool()
+	Bool::operator bool&()
 	{
 		return _Data;
 	}

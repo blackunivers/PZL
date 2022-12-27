@@ -4,7 +4,7 @@
 
 namespace PZL::Type
 {
-	 // Represents Booleans
+	 // Represents Booleans.
 	struct Bool : public Object<>
 	{
 	public:
@@ -12,11 +12,11 @@ namespace PZL::Type
 		Bool(const bool& Value);
 		Bool(bool&& Value);
 
-		// Returns its current value as a string
+		// Returns its current value as a string.
 		virtual const char* ToString() const override;
 
-		// So that it can be used in logical operations
-		operator bool();
+		// So that it can be used in logical operations.
+		operator bool&();
 	private:
 		bool _Data;
 	};
