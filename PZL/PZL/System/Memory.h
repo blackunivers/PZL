@@ -2,9 +2,6 @@
 
 #include "Types/Base.h"
 
-#define pznew		new
-#define pzdel		delete
-
 void* operator new(PZL::Type::Size Size);
 void* operator new[](PZL::Type::Size Size);
 void operator delete(void* Block, PZL::Type::Size Size);

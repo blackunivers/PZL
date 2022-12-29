@@ -36,7 +36,19 @@
     <ClCompile Include="PZL\IO\IO.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="PZL\System\Machine.cpp">
+    <ClCompile Include="PZL\Parser\Parser.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Parser\AST\AST.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Lexer\Token.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Parser\AST\Statement.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Parser\AST\Expression.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
@@ -74,11 +86,30 @@
     <ClInclude Include="PZL\IO\IO.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="PZL\System\Machine.h">
+    <ClInclude Include="PZL\System\Error.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\Parser.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\AST\AST.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Lexer\Token.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\AST\Expression.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\AST\Statement.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\Precedence.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="examples\Main.pzl" />
+    <None Include="examples\Var.pzl" />
   </ItemGroup>
 </Project>

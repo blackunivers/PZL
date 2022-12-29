@@ -6,12 +6,14 @@
 namespace PZL::IO
 {
 
+	// Represents a text file.
 	struct File
 	{
-		const char* Data;
+		char* Data;
 		const Type::Size Len;
 		const Type::Bool IsValid;
 	};
-
+	
+	// Gets the contents of a file and returns a file pointer.
 	File* ReadFile(const char* Path);
 }

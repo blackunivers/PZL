@@ -1,27 +1,30 @@
 #include "PCH.h"
 #include "PZL.h"
 
-int main()
+int main(int argc, char** argv)
 {
+	PZL::Init();
 	using namespace PZL::Type;
 	using namespace PZL;
-
-	PZL::IO::File* SourceFile = PZL::IO::ReadFile("examples/Main.pz");
+	IO::File* SourceFile = PZL::IO::ReadFile(argv[1]);
 	
-	const char* Source = SourceFile->Data;
+	PZL::Parser* Parser = new PZL::Parser(SourceFile->Data);
 
-	PZL::Token* TK;
-	PZL::Lexer* Lexer = new PZL::Lexer(Source);
+	auto Program = Parser->ParseProgram();
 
-	while ((TK = Lexer->NextToken())->Type != TokenType::END_OF_FILE)
+	if (Parser->Errors.size() > 0)
 	{
-		std::cout << TK->ToString() << "\n";
+		for (auto error : Parser->Errors)
+			std::cout << error << '\n';
 	}
 
+	std::cout << Program->ToString() << "\n";
+
+	delete Program;
+	delete Parser;
+	delete SourceFile;
+
+	PZL::Exit();
 	std::cout << PZL::System::Memory::Get()->MemoryUsedTotal;
-
-	delete TK;
-	delete Lexer;
-
 	return 0;
 }

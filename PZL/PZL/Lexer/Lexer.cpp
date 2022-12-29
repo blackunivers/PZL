@@ -1,95 +1,10 @@
 #include "PCH.h"
 #include "Lexer.h"
 
+#include "Lexer/Token.h"
+
 namespace PZL
 {
-
-    const char* TokenTypeToString(TokenType Type)
-    {
-        switch (Type)
-        {
-        case TokenType::ID:
-            return "ID";
-
-        case TokenType::EQUALS:
-            return "Equals";
-        case TokenType::PLUS:
-            return "Plus";
-        case TokenType::MINUS:
-            return "Minus";
-        case TokenType::MULTIPLICATION:
-            return "Multiplication";
-        case TokenType::DIVISION:
-            return "Division";
-        case TokenType::LPAREN:
-            return "LParen";
-        case TokenType::RPAREN:
-            return "RParen";
-        case TokenType::LBRACE:
-            return "LBrace";
-        case TokenType::RBRACE:
-            return "RBrace";
-        case TokenType::COLON:
-            return "Colon";
-        case TokenType::SEMICOLON:
-            return "Semicolon";
-        case TokenType::COMMA:
-            return "Comma";
-        case TokenType::DOT:
-            return "Dot";
-
-        case TokenType::EQUALS_TO:
-            return "EqualsTo";
-        case TokenType::NOT:
-            return "Not";
-        case TokenType::NOT_EQUALS:
-            return "NotEquals";
-        case TokenType::LESS_THAN:
-            return "LessThan";
-        case TokenType::GREATER_THAN:
-            return "GreaterThan";
-
-        case TokenType::INT:
-            return "Int";
-
-        case TokenType::TYPE_INT:
-            return "TypeInt";
-
-        case TokenType::FUNCTION:
-            return "Function";
-        case TokenType::RETURN:
-            return "Return";
-
-        case TokenType::END_OF_FILE:
-            return "EndOfFile";
-        }
-
-        return "ILLEGAL";
-    }
-
-    static std::unordered_map<const char*, TokenType> KeyWords = {};
-
-    static int DefineKeyWords()
-    {
-        KeyWords["int"] = TokenType::TYPE_INT;
-        KeyWords["func"] = TokenType::FUNCTION;
-        KeyWords["return"] = TokenType::RETURN;
-
-        return 0;
-    }
-
-    TokenType LookUpTokenType(const char* ID)
-    {
-        static int Unused = DefineKeyWords();
-
-        for (auto &[Key, Word] : KeyWords)
-        {
-            if (std::strcmp(Key, ID) == 0)
-                return Word;
-        }
-
-        return TokenType::ID;
-    }
 
     Lexer::Lexer(const char* Source)
     {
@@ -184,7 +99,7 @@ namespace PZL
 
     void Lexer::_SkipWhiteSpace()
     {
-        while (_Current == ' ' || _Current == '\t' || _Current == '\n')
+        while (_Current == ' ' || _Current == '\t' || _Current == '\n' || _Current == '\r')
             _Advance();
     }
 
@@ -258,7 +173,7 @@ namespace PZL
 
         while (std::isdigit(_Current))
         {
-            Value = (char*)realloc(Value, (strlen(Value) + 1) * sizeof(char));
+            Value = (char*)realloc(Value, (strlen(Value) + 2) * sizeof(char));
             char* Tmp = (char*)calloc(2, sizeof(char));
             Tmp[0] = _Current;
             Tmp[1] = '\0';

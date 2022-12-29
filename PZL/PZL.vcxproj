@@ -175,18 +175,28 @@
     </ClCompile>
     <ClCompile Include="PZL\IO\IO.cpp" />
     <ClCompile Include="PZL\Lexer\Lexer.cpp" />
-    <ClCompile Include="PZL\System\Machine.cpp" />
+    <ClCompile Include="PZL\Lexer\Token.cpp" />
+    <ClCompile Include="PZL\Parser\AST\AST.cpp" />
+    <ClCompile Include="PZL\Parser\AST\Expression.cpp" />
+    <ClCompile Include="PZL\Parser\AST\Statement.cpp" />
+    <ClCompile Include="PZL\Parser\Parser.cpp" />
     <ClCompile Include="PZL\System\Memory.cpp" />
     <ClCompile Include="PZL\Types\Bool.cpp" />
     <ClCompile Include="PZL\Types\Str.cpp" />
     <ClCompile Include="src\Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="PZL\Lexer\Token.h" />
+    <ClInclude Include="PZL\Parser\AST\AST.h" />
+    <ClInclude Include="PZL\Parser\AST\Expression.h" />
+    <ClInclude Include="PZL\Parser\AST\Statement.h" />
+    <ClInclude Include="PZL\Parser\Parser.h" />
     <ClInclude Include="include\PCH.h" />
     <ClInclude Include="PZL\IO\IO.h" />
     <ClInclude Include="PZL\Lexer\Lexer.h" />
+    <ClInclude Include="PZL\Parser\Precedence.h" />
     <ClInclude Include="PZL\PZL.h" />
-    <ClInclude Include="PZL\System\Machine.h" />
+    <ClInclude Include="PZL\System\Error.h" />
     <ClInclude Include="PZL\System\Memory.h" />
     <ClInclude Include="PZL\Types\Base.h" />
     <ClInclude Include="PZL\Types\Bool.h" />
@@ -197,6 +207,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="examples\Main.pzl" />
+    <None Include="examples\Var.pzl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

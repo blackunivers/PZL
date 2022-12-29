@@ -8,20 +8,20 @@ namespace PZL::Type
 
 	// Represents both signed and unsigned numbers.
 	template<typename T>
-	struct BasicInt : public Object<const char*>
+	struct BasicInt : public Object<>
 	{
 	public:
-		BasicInt() : _Data(0)
+		BasicInt() : Data(0)
 		{
 			OType = ObjectType::Int;
 		}
 
-		BasicInt(const T& Value) : _Data(Value)
+		BasicInt(const T& Value) : Data(Value)
 		{
 			OType = ObjectType::Int;
 		}
 
-		BasicInt(T&& Value) : _Data(Value)
+		BasicInt(T&& Value) : Data(Value)
 		{
 			OType = ObjectType::Int;
 		}
@@ -29,50 +29,50 @@ namespace PZL::Type
 		// Returns its current value as a string.
 		virtual const char* ToString() const override
 		{
-			std::string Str = std::to_string(_Data);
+			std::string Str = std::to_string(Data);
 			char* NStr = (char*)calloc(Str.length(), sizeof(char));
 			strcpy(NStr, Str.c_str());
 			return NStr;
 		}
 
 		template<typename Type>
-		BasicInt<T>& operator+=(Type A)
+		inline BasicInt<T>& operator+=(Type A)
 		{
-			this->_Data += A;
+			this->Data += A;
 			return *this;
 		}
 
 		template<typename Type>
-		BasicInt<T>& operator-=(Type A)
+		inline BasicInt<T>& operator-=(Type A)
 		{
-			this->_Data -= A;
+			this->Data -= A;
 			return *this;
 		}
 
 		template<typename Type>
-		BasicInt<T>& operator*=(Type A)
+		inline BasicInt<T>& operator*=(Type A)
 		{
-			this->_Data *= A;
+			this->Data *= A;
 			return *this;
 		}
 
 		template<typename Type>
-		BasicInt<T>& operator/=(Type A)
+		inline BasicInt<T>& operator/=(Type A)
 		{
-			this->_Data /= A;
+			this->Data /= A;
 			return *this;
 		}
 
 		template<typename Type>
-		BasicInt<T>& operator%=(Type A)
+		inline BasicInt<T>& operator%=(Type A)
 		{
-			this->_Data %= A;
+			this->Data %= A;
 			return *this;
 		}
 
 		inline BasicInt<T>& operator++()
 		{ 
-			this->_Data++;
+			this->Data++;
 			return *this;
 		}
 
@@ -85,16 +85,16 @@ namespace PZL::Type
 
 		inline bool operator>(const BasicInt<T>& A)
 		{
-			return _Data > A._Data;
+			return Data > A.Data;
 		}
 
 		// Returns the current value as the type specified in the template.
 		operator T&()
 		{
-			return _Data;
+			return Data;
 		}
-	private:
-		T _Data;
+	public:
+		T Data;
 	private:
 		friend bool operator>(const BasicInt<T>& A, Size B);
 	};
@@ -112,6 +112,6 @@ namespace PZL::Type
 	template<typename T>
 	inline bool operator>(const BasicInt<T>& A, Size B)
 	{
-		return A._Data > B;
+		return A.Data > B;
 	}
 }

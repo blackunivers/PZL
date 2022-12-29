@@ -12,11 +12,13 @@ namespace PZL::Type
 	Bool::Bool(const bool& Value) : _Data(Value)
 	{
 		OType = ObjectType::Bool;
+		this->_Data = Value;
 	}
 
 	Bool::Bool(bool&& Value) : _Data(Value)
 	{
 		OType = ObjectType::Bool;
+		this->_Data = Value;
 	}
 
 	const char* Bool::ToString() const
