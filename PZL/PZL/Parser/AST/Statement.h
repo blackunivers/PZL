@@ -39,4 +39,29 @@ namespace PZL::AST
 	public:
 		Expression* Value;
 	};
+
+	struct Block : public Statement
+	{
+	public:
+		Block(Token* TK, std::vector<Statement*> Statements = {});
+		~Block();
+
+		virtual inline const char* ToString() const override;
+		virtual const ASTNodeType Type() const override;
+	public:
+		std::vector<Statement*> Statements;
+	};
+
+	struct ReturnStatement : public Statement
+	{
+	public:
+		ReturnStatement(Token* TK, Expression* Value = nullptr);
+		~ReturnStatement();
+
+		virtual const char* ToString() const override;
+		virtual const ASTNodeType Type() const override;
+	public:
+		Expression* Value;
+	};
+
 }

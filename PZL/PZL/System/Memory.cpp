@@ -24,6 +24,8 @@ void operator delete(void* Block, PZL::Type::Size Size)
     PZL::System::Memory::Get()->MemoryFree += Size;
     PZL::System::Memory::Get()->MemoryUsedTotal -= Size;
 
+    auto& a = PZL::System::Memory::Get()->MemoryUsedTotal;
+
     free(Block);
 }
 
@@ -31,6 +33,8 @@ void operator delete[](void* Block, PZL::Type::Size Size)
 {
     PZL::System::Memory::Get()->MemoryFree += Size;
     PZL::System::Memory::Get()->MemoryUsedTotal -= Size;
+
+    auto& a = PZL::System::Memory::Get()->MemoryUsedTotal;
 
     free(Block);
 }
@@ -49,4 +53,25 @@ namespace PZL::System
         }
         return s_Instance;
     }
+
+    void Memory::PrintUsed()
+    {
+        const Type::Size& bytes = System::Memory::Get()->MemoryUsedTotal;
+
+        static const float gb = 1024 * 1024 * 1024;
+        static const float mb = 1024 * 1024;
+        static const float kb = 1024;
+
+        std::string Result;
+        if (bytes > gb)
+            Result = std::to_string(bytes / gb) + " GB";
+        else if (bytes > mb)
+            Result = std::to_string(bytes / mb) + " MB";
+        else if (bytes > kb)
+            Result = std::to_string(bytes / kb) + " KB";
+        else
+            Result = std::to_string((float)bytes) + " bytes";
+        std::cout << Result << '\n';
+    }
+
 }

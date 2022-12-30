@@ -52,6 +52,7 @@ namespace PZL
 
 	void Parser::_DefineVarTypes()
 	{
+		VarTypes.emplace_back(TokenType::TYPE_VOID);
 		VarTypes.emplace_back(TokenType::TYPE_INT);
 		VarTypes.emplace_back(TokenType::TYPE_BOOL);
 	}
@@ -113,7 +114,7 @@ namespace PZL
 		{
 			auto it = _InfixParseFns.find(_NextToken->Type);
 
-			if (it->second != nullptr)
+			if (it != _InfixParseFns.end())
 			{
 				ipf = _InfixParseFns[_NextToken->Type];
 				_Advance();
@@ -156,12 +157,32 @@ namespace PZL
 		return Expr;
 	}
 
+	AST::ReturnStatement* Parser::_ParseReturnStatement()
+	{
+		AST::ReturnStatement* RS = new AST::ReturnStatement(_CurrentToken);
+
+		_Advance();
+
+		RS->Value = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
+
+		if (_NextToken->Type == TokenType::SEMICOLON)
+		{
+			delete _NextToken;
+			_Advance();
+		}
+
+		return RS;
+	}
+
 	AST::Statement* Parser::_ParseStatement()
 	{
 		for(auto VarType : VarTypes)
 			if(_CurrentToken->Type == VarType)
 				return _ParseVarStatement(VarType);
-		return _ParseExpressionStatement();
+		if (_CurrentToken->Type == TokenType::RETURN)
+			return _ParseReturnStatement();
+		else
+			return _ParseExpressionStatement();
 	}
 
 	AST::VarStatement* Parser::_ParseVarStatement(TokenType VarType)
@@ -216,6 +237,56 @@ namespace PZL
 		return Infix;
 	}
 
+	AST::Expression* ParseFunction(Parser* This, TokenType)
+	{
+		AST::Function* Function = new AST::Function(This->_CurrentToken);
+
+		if (!This->_ExpectedToken(TokenType::ID))
+			return nullptr;
+
+		Function->FunctionName = new AST::Identifier(This->_CurrentToken, This->_CurrentToken->Value);
+
+		if (!This->_ExpectedToken(TokenType::LPAREN))
+			return nullptr;
+		delete This->_CurrentToken;
+
+		Function->Parameters = This->_ParseFunctionParameters();
+
+		if (!This->_ExpectedToken(TokenType::COLON))
+			return nullptr;
+		delete This->_CurrentToken;
+
+		This->_Advance();
+
+		for (auto VarType : This->VarTypes)
+		{
+			if (This->_CurrentToken->Type == VarType)
+			{
+				Function->FunctionType = This->_CurrentToken;
+				break;
+			}
+			if (VarType == TokenType::TYPE_BOOL)
+				return nullptr;
+		}
+
+		if (This->_NextToken->Type == TokenType::SEMICOLON)
+		{
+			delete This->_NextToken;
+			This->_Advance();
+
+			return Function;
+		}
+
+		if (!This->_ExpectedToken(TokenType::LBRACE))
+			return nullptr;
+		delete This->_CurrentToken;
+
+		Function->Body = This->_ParseBlock();
+		Function->IsDefined = true;
+
+		return Function;
+	}
+
 	AST::Expression* ParseIdentifier(Parser* This, TokenType)
 	{
 		return new AST::Identifier(This->_CurrentToken, This->_CurrentToken->Value);
@@ -267,6 +338,47 @@ namespace PZL
 		return false;
 	}
 
+	AST::Expression* ParseCall(Parser* This, AST::Expression* Fn)
+	{
+		AST::Call* call = new AST::Call(This->_CurrentToken, Fn);
+		call->Arguments = This->_ParseCallArguments();
+
+		return call;
+	}
+
+	std::vector<AST::Expression*> Parser::_ParseCallArguments()
+	{
+		std::vector<AST::Expression*> args = {};
+
+		if (_NextToken->Type == TokenType::RPAREN)
+		{
+			delete _NextToken;
+			_Advance();
+			return args;
+		}
+
+		_Advance();
+		AST::Expression* Expr;
+		if (Expr = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL))
+			args.emplace_back(Expr);
+
+		while (_NextToken->Type == TokenType::COMMA)
+		{
+			delete _NextToken;
+			_Advance();
+			_Advance();
+
+			if (Expr = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL))
+				args.emplace_back(Expr);
+		}
+
+		if (!_ExpectedToken(TokenType::RPAREN))
+			return {};
+		delete _CurrentToken;
+
+		return args;
+	}
+
 	void Parser::_ExpectedError(TokenType Type)
 	{
 		std::stringstream ss;
@@ -279,6 +391,89 @@ namespace PZL
 		Errors.emplace_back(NStr);
 	}
 
+	std::vector<AST::VarStatement*> Parser::_ParseFunctionParameters()
+	{
+		std::vector<AST::VarStatement*> Params;
+
+		if (_NextToken->Type == TokenType::RPAREN)
+		{
+			_Advance();
+			delete _CurrentToken;
+			return Params;
+		}
+
+		_Advance();
+
+		TokenType FristArgumentType = _CurrentToken->Type;
+		AST::VarStatement* FristArgument = new AST::VarStatement(_CurrentToken, _CurrentToken->Type);
+
+		if (!_ExpectedToken(TokenType::ID))
+			return {};
+
+		FristArgument->ID = new AST::Identifier(_CurrentToken, _CurrentToken->Value);
+
+		if (_NextToken->Type == TokenType::EQUALS)
+		{
+			delete _NextToken;
+			_Advance();
+			_Advance();
+
+			FristArgument->Value = _ParseExpression(Precedence::LOWEST, FristArgumentType);
+		}
+
+		Params.emplace_back(FristArgument);
+
+		while (_NextToken->Type == TokenType::COMMA)
+		{
+			delete _NextToken;
+			_Advance();
+			_Advance();
+
+			TokenType ArgumentType = _CurrentToken->Type;
+			AST::VarStatement* Argument = new AST::VarStatement(_CurrentToken, _CurrentToken->Type);
+
+			if (!_ExpectedToken(TokenType::ID))
+				return {};
+
+			Argument->ID = new AST::Identifier(_CurrentToken, _CurrentToken->Value);
+
+			if (_NextToken->Type == TokenType::EQUALS)
+			{
+				delete _NextToken;
+				_Advance();
+				_Advance();
+
+				Argument->Value = _ParseExpression(Precedence::LOWEST, ArgumentType);
+			}
+
+			Params.emplace_back(Argument);
+		}
+
+		if (!_ExpectedToken(TokenType::RPAREN))
+			return {};
+		delete _CurrentToken;
+
+		return Params;
+	}
+
+	AST::Block* Parser::_ParseBlock()
+	{
+		AST::Block* Block = new AST::Block(_CurrentToken);
+
+		_Advance();
+		while (_CurrentToken->Type != TokenType::RBRACE && _CurrentToken->Type != TokenType::END_OF_FILE)
+		{
+			AST::Statement* statement = _ParseStatement();
+
+			if (statement != nullptr)
+				Block->Statements.emplace_back(statement);
+
+			_Advance();
+		}
+
+		return Block;
+	}
+
 	Precedence Parser::_PeekPrecedence()
 	{
 		return Precedences[_NextToken->Type];
@@ -287,7 +482,7 @@ namespace PZL
 	PrefixParseFns DefinePrefixFns()
 	{
 		PrefixParseFns Fns;
-		//Fns[TokenType::FUNCTION] = (PrefixParseFn)ParseFunction;
+		Fns[TokenType::FUNCTION] = (PrefixParseFn)ParseFunction;
 		Fns[TokenType::ID] = (PrefixParseFn)ParseIdentifier;
 		Fns[TokenType::INT] = (PrefixParseFn)ParseInteger;
 		//fns[TokenType::C_IF] = (PrefixParseFn)_ParseIf;
@@ -312,11 +507,11 @@ namespace PZL
 		fns[TokenType::MINUS] = (InfixParseFn)ParseInfixExpression;
 		fns[TokenType::DIVISION] = (InfixParseFn)ParseInfixExpression;
 		fns[TokenType::MULTIPLICATION] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::EQUALS] = (InfixParseFn)ParseInfixExpression;
+		fns[TokenType::EQUALS_TO] = (InfixParseFn)ParseInfixExpression;
 		fns[TokenType::NOT_EQUALS] = (InfixParseFn)ParseInfixExpression;
 		fns[TokenType::LESS_THAN] = (InfixParseFn)ParseInfixExpression;
 		fns[TokenType::GREATER_THAN] = (InfixParseFn)ParseInfixExpression;
-		//fns[TokenType::LPAREN] = (InfixParseFn)_ParseCall;
+		fns[TokenType::LPAREN] = (InfixParseFn)ParseCall;
 
 		return fns;
 	}

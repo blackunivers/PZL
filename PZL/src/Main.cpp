@@ -16,15 +16,16 @@ int main(int argc, char** argv)
 	{
 		for (auto error : Parser->Errors)
 			std::cout << error << '\n';
+		return -1;
 	}
 
-	std::cout << Program->ToString() << "\n";
+	std::cout << Program->ToString();
 
 	delete Program;
 	delete Parser;
 	delete SourceFile;
 
 	PZL::Exit();
-	std::cout << PZL::System::Memory::Get()->MemoryUsedTotal;
+	PZL::System::Memory::Get()->PrintUsed();
 	return 0;
 }

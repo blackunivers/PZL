@@ -56,6 +56,8 @@ namespace PZL
         case TokenType::TRUE:
             return "True";
 
+        case TokenType::TYPE_VOID:
+            return "TypeVoid";
         case TokenType::TYPE_INT:
             return "TypeInt";
         case TokenType::TYPE_BOOL:
@@ -75,6 +77,7 @@ namespace PZL
 
     static int DefineKeyWords()
     {
+        KeyWords["void"] = TokenType::TYPE_VOID;
         KeyWords["int"] = TokenType::TYPE_INT;
         KeyWords["bool"] = TokenType::TYPE_BOOL;
         KeyWords["false"] = TokenType::FALSE;

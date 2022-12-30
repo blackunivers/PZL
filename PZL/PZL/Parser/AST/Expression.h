@@ -3,9 +3,12 @@
 #include "Parser/AST/AST.h"
 #include "Types/Bool.h"
 #include "Types/Int.h"
+#include "Lexer/Token.h"
 
 namespace PZL::AST
 {
+	struct VarStatement;
+	struct Block;
 
 	struct Identifier : public Expression
 	{
@@ -70,6 +73,35 @@ namespace PZL::AST
 		const char* Operator;
 		Expression* Left;
 		Expression* Right;
+	};
+
+	struct Function : public Expression
+	{
+	public:
+		Function(Token* TK, Token* FunctionType = nullptr, Identifier* FunctionName = nullptr, std::vector<VarStatement*> Parameters = {}, Block* Body = nullptr);
+		~Function();
+
+		virtual const char* ToString() const override;
+		virtual const ASTNodeType Type() const override;
+	public:
+		Token* FunctionType;
+		Identifier* FunctionName;
+		std::vector<VarStatement*> Parameters;
+		Block* Body;
+		Type::Bool IsDefined;
+	};
+
+	struct Call : public Expression
+	{
+	public:
+		Call(Token* TK, Expression* Fn, std::vector<Expression*> Arguments = {});
+		~Call();
+
+		virtual const char* ToString() const override;
+		virtual const ASTNodeType Type() const override;
+	public:
+		Expression* Fn;
+		std::vector<Expression*> Arguments;
 	};
 
 }

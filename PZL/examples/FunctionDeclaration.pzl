@@ -1,0 +1,11 @@
+
+func Sum(int a, int b) : int
+{
+	return a + b;
+}
+
+func Main () : int
+{
+	Sum(1, 2);
+	return 0;
+}

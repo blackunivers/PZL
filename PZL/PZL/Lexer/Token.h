@@ -1,6 +1,8 @@
 #pragma once
 
+#include "PCH.h"
 #include "Types/Base.h"
+
 
 namespace PZL
 {
@@ -31,12 +33,18 @@ namespace PZL
 		LESS_THAN,
 		GREATER_THAN,
 
+		// flow controllers
+		C_IF,
+		C_ELIF,
+		C_ELSE,
+
 		//Values
 		INT,
 		TRUE,
 		FALSE,
 
 		//Primitive types
+		TYPE_VOID,
 		TYPE_INT,
 		TYPE_BOOL,
 
@@ -75,7 +83,6 @@ namespace PZL
 
 		~Token()
 		{
-			free(Value);
 		}
 
 		// Returns its current value as a string.

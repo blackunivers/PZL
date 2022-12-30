@@ -206,6 +206,7 @@
     <ClInclude Include="PZL\Types\Str.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="examples\FunctionDeclaration.pzl" />
     <None Include="examples\Main.pzl" />
     <None Include="examples\Var.pzl" />
   </ItemGroup>

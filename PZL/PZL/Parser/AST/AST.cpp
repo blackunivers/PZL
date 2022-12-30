@@ -23,8 +23,7 @@ namespace PZL::AST
 
 	Expression::~Expression()
 	{
-		if (TK)
-			delete TK;
+		delete TK;
 	}
 
 	Program::Program(std::vector<Statement*> Statements)

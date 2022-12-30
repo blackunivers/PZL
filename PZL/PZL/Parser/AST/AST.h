@@ -18,9 +18,13 @@ namespace PZL::AST
 		Boolean,
 		Prefix,
 		Infix,
+		Function,
+		Call,
 
 		VarStatement,
 		ExpressionStatement,
+		Block,
+		ReturnStatement,
 	};
 
 	struct ASTNode

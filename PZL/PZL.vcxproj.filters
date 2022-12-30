@@ -111,5 +111,6 @@
   <ItemGroup>
     <None Include="examples\Main.pzl" />
     <None Include="examples\Var.pzl" />
+    <None Include="examples\FunctionDeclaration.pzl" />
   </ItemGroup>
 </Project>

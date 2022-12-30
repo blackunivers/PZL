@@ -15,6 +15,7 @@ namespace PZL::System
 	public:
 		static Memory* Get();
 
+		void PrintUsed();
 	public:
 		Type::UInt64 MemoryUsed = 0;
 		Type::UInt64 MemoryUsedTotal = 0;
