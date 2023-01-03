@@ -4,30 +4,26 @@
 namespace PZL::Type
 {
 
-	Bool::Bool() : _Data(false)
+	Bool::Bool() : Data(false)
 	{
-		OType = ObjectType::Bool;
+		Type = ObjectType::Bool;
 	}
 
-	Bool::Bool(const bool& Value) : _Data(Value)
+	Bool::Bool(const bool& Value) : Data(Value)
 	{
-		OType = ObjectType::Bool;
-		this->_Data = Value;
+		Type = ObjectType::Bool;
+		this->Data = Value;
 	}
 
-	Bool::Bool(bool&& Value) : _Data(Value)
+	Bool::Bool(bool&& Value) : Data(Value)
 	{
-		OType = ObjectType::Bool;
-		this->_Data = Value;
+		Type = ObjectType::Bool;
+		this->Data = Value;
 	}
 
 	const char* Bool::ToString() const
 	{
-		return _Data ? "true" : "false";
+		return Data ? "true" : "false";
 	}
 
-	Bool::operator bool&()
-	{
-		return _Data;
-	}
 }

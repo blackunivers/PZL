@@ -14,12 +14,13 @@ namespace PZL::AST
 		Program,
 
 		Identifier,
-		Integer,
+		Integer32,
 		Boolean,
 		Prefix,
 		Infix,
 		Function,
 		Call,
+		If,
 
 		VarStatement,
 		ExpressionStatement,

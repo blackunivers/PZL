@@ -1,6 +1,13 @@
 #pragma once
 
-#include "Bool.h"
-#include "Int.h"
-#include "Str.h"
-#include "Size.h"
+#include "Types/Base.h"
+#include "Types/Null.h"
+#include "Types/Bool.h"
+#include "Types/Int.h"
+#include "Types/Size.h"
+
+#include "Types/Error.h"
+#include "Types/Return.h"
+#include "Types/Function.h"
+
+#include "Types/Global.h"

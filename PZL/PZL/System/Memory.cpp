@@ -3,26 +3,26 @@
 
 void* operator new(PZL::Type::Size Size)
 {
-    PZL::System::Memory::Get()->MemoryUsedTotal += Size;
-    PZL::System::Memory::Get()->MemoryUsed += Size;
-    PZL::System::Memory::Get()->MemoryAllocated++;
+    PZL::System::Memory::Get()->MemoryUsedTotal.Data += Size;
+    PZL::System::Memory::Get()->MemoryUsed.Data += Size;
+    PZL::System::Memory::Get()->MemoryAllocated.Data++;
 
     return malloc(Size);
 }
 
 void* operator new[](PZL::Type::Size Size)
 {
-    PZL::System::Memory::Get()->MemoryUsedTotal += Size;
-    PZL::System::Memory::Get()->MemoryUsed += Size;
-    PZL::System::Memory::Get()->MemoryAllocated++;
+    PZL::System::Memory::Get()->MemoryUsedTotal.Data += Size;
+    PZL::System::Memory::Get()->MemoryUsed.Data += Size;
+    PZL::System::Memory::Get()->MemoryAllocated.Data++;
 
     return malloc(Size);
 }
 
 void operator delete(void* Block, PZL::Type::Size Size)
 {
-    PZL::System::Memory::Get()->MemoryFree += Size;
-    PZL::System::Memory::Get()->MemoryUsedTotal -= Size;
+    PZL::System::Memory::Get()->MemoryFree.Data += Size;
+    PZL::System::Memory::Get()->MemoryUsedTotal.Data -= Size;
 
     auto& a = PZL::System::Memory::Get()->MemoryUsedTotal;
 
@@ -31,8 +31,8 @@ void operator delete(void* Block, PZL::Type::Size Size)
 
 void operator delete[](void* Block, PZL::Type::Size Size)
 {
-    PZL::System::Memory::Get()->MemoryFree += Size;
-    PZL::System::Memory::Get()->MemoryUsedTotal -= Size;
+    PZL::System::Memory::Get()->MemoryFree.Data += Size;
+    PZL::System::Memory::Get()->MemoryUsedTotal.Data -= Size;
 
     auto& a = PZL::System::Memory::Get()->MemoryUsedTotal;
 
@@ -56,7 +56,7 @@ namespace PZL::System
 
     void Memory::PrintUsed()
     {
-        const Type::Size& bytes = System::Memory::Get()->MemoryUsedTotal;
+        const Type::Size& bytes = System::Memory::Get()->MemoryUsedTotal.Data;
 
         static const float gb = 1024 * 1024 * 1024;
         static const float mb = 1024 * 1024;

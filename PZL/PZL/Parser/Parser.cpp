@@ -1,63 +1,68 @@
 #include "PCH.h"
 #include "Parser.h"
 
-#include "Parser/AST/AST.h"
 #include "Lexer/Token.h"
 #include "Lexer/Lexer.h"
-#include "Parser/AST/Statement.h"
-#include "Parser/AST/Expression.h"
 #include "Parser/Precedence.h"
+#include "Parser/PrefixParseFns.h"
+#include "Parser/InfixParseFns.h"
 
 namespace PZL
 {
 
 	Parser::Parser(const char* Source)
 	{
-		_Lexer = new Lexer(Source);
-		_InitPrecedences();
+		Lex = new Lexer(Source);
+		InitPrecedences();
 
-		_PrefixParseFns = _RegisterPrefixFns();
-		_InfixParseFns = _RegisterInfixFns();
+		PrefixFns = RegisterPrefixFns();
+		InfixFns = RegisterInfixFns();
 
-		_DefineVarTypes();
+		Advance();
+		Advance();
+
+		DefineVarTypes();
 	}
 
 	Parser::~Parser()
 	{
-		delete _CurrentToken;
-		delete _NextToken;
-		Errors.clear();
-		delete _Lexer;
+		delete Lex;
+		PrefixFns.clear();
+		InfixFns.clear();
+		VarTypes.clear();
+		Precedences.clear();
+		
+		if(CurrentToken != nullptr)
+			delete CurrentToken;
+		if (NextToken != nullptr)
+			delete NextToken;
 	}
 
 	AST::Program* Parser::ParseProgram()
 	{
 		AST::Program* Program = new AST::Program({});
 
-		_Advance();
-		_Advance();
-
-		while (_CurrentToken->Type != TokenType::END_OF_FILE)
+		while (CurrentToken->Type != TokenType::END_OF_FILE)
 		{
-			AST::Statement* statement = _ParseStatement();
+			AST::Statement* statement = ParseStatement();
 
 			if (statement != nullptr)
 				Program->Statements.emplace_back(statement);
 
-			_Advance();
+			Advance();
 		}
 
 		return Program;
 	}
 
-	void Parser::_DefineVarTypes()
+	void Parser::DefineVarTypes()
 	{
 		VarTypes.emplace_back(TokenType::TYPE_VOID);
 		VarTypes.emplace_back(TokenType::TYPE_INT);
 		VarTypes.emplace_back(TokenType::TYPE_BOOL);
 	}
 
-	void Parser::_InitPrecedences()
+	void Parser::InitPrecedences()
 	{
 		Precedences[TokenType::EQUALS_TO] = Precedence::EQUALS_TO;
 		Precedences[TokenType::NOT_EQUALS] = Precedence::EQUALS_TO;
@@ -70,15 +75,15 @@ namespace PZL
 		Precedences[TokenType::LPAREN] = Precedence::CALL;
 	}
 
-	void Parser::_Advance()
+	void Parser::Advance()
 	{
-		_CurrentToken = _NextToken;
-		_NextToken = _Lexer->NextToken();
+		CurrentToken = NextToken;
+		NextToken = Lex->NextToken();
 	}
 
-	Precedence Parser::_CurrentPrecedence()
+	Precedence Parser::CurrentPrecedence()
 	{
-		auto it = Precedences.find(_CurrentToken->Type);
+		auto it = Precedences.find(CurrentToken->Type);
 
 		if ((int)it->second)
 		{
@@ -88,36 +93,31 @@ namespace PZL
 		return Precedence::LOWEST;
 	}
 
-	AST::Expression* Parser::_ParseExpression(Precedence P, TokenType Type)
+	AST::Expression* Parser::ParseExpression(Precedence P, TokenType Type)
 	{
-		PrefixParseFn ppf = _PrefixParseFns[_CurrentToken->Type];
+		PrefixParseFn ppf = PrefixFns[CurrentToken->Type];
 
 		AST::Expression* left_expression = nullptr;
 		if (ppf != nullptr)
 			left_expression = ppf(this, Type);
 		else
 		{
-			std::stringstream ss;
-			ss << "No se encontro ninguna funcion para parsear " << _CurrentToken->Value;
-			std::string Str = ss.str();
-
-			char* NStr = (char*)calloc(Str.length(), sizeof(char));
-			NStr[0] = '\0';
-			strcpy(NStr, Str.c_str());
-
-			Errors.emplace_back(NStr);
+			if (CurrentToken->Type == TokenType::ILLEGAL)
+				std::cout << "Error at Line " << CurrentToken->Line << ": \n\tAn expression was expected";
+			
+			exit(-1);
 		}
 
 		InfixParseFn ipf;
 
-		while (_NextToken->Type != TokenType::SEMICOLON && P < _PeekPrecedence())
+		while (NextToken->Type != TokenType::SEMICOLON && P < PeekPrecedence())
 		{
-			auto it = _InfixParseFns.find(_NextToken->Type);
+			auto it = InfixFns.find(NextToken->Type);
 
-			if (it != _InfixParseFns.end())
+			if (it != InfixFns.end())
 			{
-				ipf = _InfixParseFns[_NextToken->Type];
-				_Advance();
+				ipf = InfixFns[NextToken->Type];
+				Advance();
 
 				left_expression = ipf(this, left_expression);
 			}
@@ -128,395 +128,242 @@ namespace PZL
 		return left_expression;
 	}
 
-	AST::ExpressionStatement* Parser::_ParseExpressionStatement()
+	AST::ExpressionStatement* Parser::ParseExpressionStatement()
 	{
-		AST::ExpressionStatement* ES = new AST::ExpressionStatement(_CurrentToken);
-		ES->Value = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
+		AST::ExpressionStatement* ES = new AST::ExpressionStatement(new Token(CurrentToken->Type, CurrentToken->Value, CurrentToken->Line));
+		ES->Value = ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
 
-		if (_NextToken->Type == TokenType::SEMICOLON)
+		if (NextToken->Type == TokenType::SEMICOLON)
 		{
-			delete _NextToken;
-			_Advance();
+			delete NextToken;
+			Advance();
 		}
 
 		return ES;
 	}
 
-	AST::Expression* ParseGroupedExpression(Parser* This, TokenType)
+	AST::ReturnStatement* Parser::ParseReturnStatement()
 	{
-		delete This->_CurrentToken;
+		AST::ReturnStatement* RS = new AST::ReturnStatement(CurrentToken);
 
-		This->_Advance();
+		Advance();
 
-		AST::Expression* Expr = This->_ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
+		RS->Value = ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
 
-		if (!This->_ExpectedToken(TokenType::RPAREN))
-			return nullptr;
-		delete This->_CurrentToken;
-
-		return Expr;
-	}
-
-	AST::ReturnStatement* Parser::_ParseReturnStatement()
-	{
-		AST::ReturnStatement* RS = new AST::ReturnStatement(_CurrentToken);
-
-		_Advance();
-
-		RS->Value = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
-
-		if (_NextToken->Type == TokenType::SEMICOLON)
+		if (NextToken->Type == TokenType::SEMICOLON)
 		{
-			delete _NextToken;
-			_Advance();
+			delete NextToken;
+			Advance();
 		}
 
 		return RS;
 	}
 
-	AST::Statement* Parser::_ParseStatement()
+	AST::Statement* Parser::ParseStatement()
 	{
 		for(auto VarType : VarTypes)
-			if(_CurrentToken->Type == VarType)
-				return _ParseVarStatement(VarType);
-		if (_CurrentToken->Type == TokenType::RETURN)
-			return _ParseReturnStatement();
+			if(CurrentToken->Type == VarType)
+				return ParseVarStatement(VarType);
+		if (CurrentToken->Type == TokenType::RETURN)
+			return ParseReturnStatement();
 		else
-			return _ParseExpressionStatement();
+			return ParseExpressionStatement();
 	}
 
-	AST::VarStatement* Parser::_ParseVarStatement(TokenType VarType)
+	AST::VarStatement* Parser::ParseVarStatement(TokenType VarType)
 	{
-		AST::VarStatement* Var = new AST::VarStatement(_CurrentToken, _CurrentToken->Type);
+		AST::VarStatement* Var = new AST::VarStatement(CurrentToken, CurrentToken->Type);
 
-		if (!_ExpectedToken(TokenType::ID))
+		if (!ExpectedToken(TokenType::ID))
 			return nullptr;
 
-		Var->ID = new AST::Identifier(_CurrentToken, _CurrentToken->Value);
+		Var->ID = new AST::Identifier(CurrentToken, CurrentToken->Value);
 
-		if(_NextToken->Type == TokenType::SEMICOLON)
+		if(NextToken->Type == TokenType::SEMICOLON)
 		{
 			if (VarType == TokenType::TYPE_INT)
-				Var->Value = new AST::Integer(_NextToken);
+				Var->Value = new AST::Integer32(NextToken);
 			else if (VarType == TokenType::TYPE_BOOL)
-				Var->Value = new AST::Boolean(_NextToken);
+				Var->Value = new AST::Boolean(NextToken);
 
-			_Advance();
+			Advance();
 
 			return Var;
 		}
 
 
-		if (!_ExpectedToken(TokenType::EQUALS))
+		if (!ExpectedToken(TokenType::EQUALS))
 			return nullptr;
-		delete _CurrentToken;
+		delete CurrentToken;
 
-		_Advance();
+		Advance();
 
-		Var->Value = _ParseExpression(Precedence::LOWEST, Var->VarType);
+		Var->Value = ParseExpression(Precedence::LOWEST, Var->VarType);
 
-		if (_NextToken->Type == TokenType::SEMICOLON)
+		if (NextToken->Type == TokenType::SEMICOLON)
 		{
-			delete _NextToken;
-			_Advance();
+			delete NextToken;
+			Advance();
 		}
 
 		return Var;
 	}
 
-	AST::Infix* ParseInfixExpression(Parser* This, AST::Expression* Left)
+	bool Parser::ExpectedToken(TokenType Type)
 	{
-		AST::Infix* Infix = new AST::Infix(This->_CurrentToken, Left, This->_CurrentToken->Value);
-
-		Precedence P = This->_CurrentPrecedence();
-
-		This->_Advance();
-
-		Infix->Right = This->_ParseExpression(P, TokenType::ILLEGAL);
-
-		return Infix;
-	}
-
-	AST::Expression* ParseFunction(Parser* This, TokenType)
-	{
-		AST::Function* Function = new AST::Function(This->_CurrentToken);
-
-		if (!This->_ExpectedToken(TokenType::ID))
-			return nullptr;
-
-		Function->FunctionName = new AST::Identifier(This->_CurrentToken, This->_CurrentToken->Value);
-
-		if (!This->_ExpectedToken(TokenType::LPAREN))
-			return nullptr;
-		delete This->_CurrentToken;
-
-		Function->Parameters = This->_ParseFunctionParameters();
-
-		if (!This->_ExpectedToken(TokenType::COLON))
-			return nullptr;
-		delete This->_CurrentToken;
-
-		This->_Advance();
-
-		for (auto VarType : This->VarTypes)
+		if (NextToken->Type == Type)
 		{
-			if (This->_CurrentToken->Type == VarType)
-			{
-				Function->FunctionType = This->_CurrentToken;
-				break;
-			}
-			if (VarType == TokenType::TYPE_BOOL)
-				return nullptr;
-		}
-
-		if (This->_NextToken->Type == TokenType::SEMICOLON)
-		{
-			delete This->_NextToken;
-			This->_Advance();
-
-			return Function;
-		}
-
-		if (!This->_ExpectedToken(TokenType::LBRACE))
-			return nullptr;
-		delete This->_CurrentToken;
-
-		Function->Body = This->_ParseBlock();
-		Function->IsDefined = true;
-
-		return Function;
-	}
-
-	AST::Expression* ParseIdentifier(Parser* This, TokenType)
-	{
-		return new AST::Identifier(This->_CurrentToken, This->_CurrentToken->Value);
-	}
-
-	AST::Expression* ParseInteger(Parser* This, TokenType Type)
-	{
-		if (Type == TokenType::TYPE_BOOL && This->_NextToken->Type == TokenType::SEMICOLON)
-		{
-			AST::Boolean* Bool = new AST::Boolean(This->_CurrentToken);
-			Bool->Value = atoi(This->_CurrentToken->Value) ? true : false;
-			return Bool;
-		}
-		
-		AST::Integer* Int = new AST::Integer(This->_CurrentToken);
-		Int->Value = atoi(This->_CurrentToken->Value);
-		return Int;
-	}
-
-	AST::Expression* ParseBoolean(Parser* This, TokenType Type)
-	{
-		AST::Boolean* Bool = new AST::Boolean(This->_CurrentToken);
-
-		Bool->Value = (This->_CurrentToken->Type == TokenType::FALSE ? false : true);
-
-		return Bool;
-	}
-
-	AST::Prefix* ParsePrefixExpression(Parser* This, TokenType)
-	{
-		AST::Prefix* prefix_expression = new AST::Prefix(This->_CurrentToken, (const char*)This->_CurrentToken->Value);
-
-		This->_Advance();
-
-		prefix_expression->Right = This->_ParseExpression(Precedence::PREFIX, TokenType::ILLEGAL);
-
-		return prefix_expression;
-	}
-
-	bool Parser::_ExpectedToken(TokenType Type)
-	{
-		if (_NextToken->Type == Type)
-		{
-			_Advance();
+			Advance();
 			return true;
 		}
 
-		_ExpectedError(Type);
+		ExpectedError(Type);
 		return false;
 	}
 
-	AST::Expression* ParseCall(Parser* This, AST::Expression* Fn)
-	{
-		AST::Call* call = new AST::Call(This->_CurrentToken, Fn);
-		call->Arguments = This->_ParseCallArguments();
-
-		return call;
-	}
-
-	std::vector<AST::Expression*> Parser::_ParseCallArguments()
+	std::vector<AST::Expression*> Parser::ParseCallArguments()
 	{
 		std::vector<AST::Expression*> args = {};
 
-		if (_NextToken->Type == TokenType::RPAREN)
+		if (NextToken->Type == TokenType::RPAREN)
 		{
-			delete _NextToken;
-			_Advance();
+			delete NextToken;
+			Advance();
 			return args;
 		}
 
-		_Advance();
+		delete CurrentToken;
+		Advance();
 		AST::Expression* Expr;
-		if (Expr = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL))
+		if (Expr = ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL))
 			args.emplace_back(Expr);
 
-		while (_NextToken->Type == TokenType::COMMA)
+		while (NextToken->Type == TokenType::COMMA)
 		{
-			delete _NextToken;
-			_Advance();
-			_Advance();
+			delete NextToken;
+			Advance();
+			Advance();
 
-			if (Expr = _ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL))
+			if (Expr = ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL))
 				args.emplace_back(Expr);
 		}
 
-		if (!_ExpectedToken(TokenType::RPAREN))
+		if (!ExpectedToken(TokenType::RPAREN))
 			return {};
-		delete _CurrentToken;
+		delete CurrentToken;
 
 		return args;
 	}
 
-	void Parser::_ExpectedError(TokenType Type)
+	void Parser::ExpectedError(TokenType Type)
 	{
 		std::stringstream ss;
-		ss << "The next token was expected to be " << TokenTypeToString(Type) << " but was obtained " << TokenTypeToString(_NextToken->Type) << ".";
 
-		std::string Str = ss.str();
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		Errors.emplace_back(NStr);
+		std::cout << "Error at line " << NextToken->Line << ": " << "\n\tThe next token was expected to be " << Token::TokenTypeToString(Type) << " but was obtained " << Token::TokenTypeToString(NextToken->Type) << '.';
+		exit(-1);
 	}
 
-	std::vector<AST::VarStatement*> Parser::_ParseFunctionParameters()
+	std::vector<AST::VarStatement*> Parser::ParseFunctionParameters()
 	{
 		std::vector<AST::VarStatement*> Params;
 
-		if (_NextToken->Type == TokenType::RPAREN)
+		if (NextToken->Type == TokenType::RPAREN)
 		{
-			_Advance();
-			delete _CurrentToken;
+			Advance();
+			delete CurrentToken;
 			return Params;
 		}
 
-		_Advance();
+		Advance();
 
-		TokenType FristArgumentType = _CurrentToken->Type;
-		AST::VarStatement* FristArgument = new AST::VarStatement(_CurrentToken, _CurrentToken->Type);
+		TokenType FristArgumentType = CurrentToken->Type;
+		AST::VarStatement* FristArgument = new AST::VarStatement(CurrentToken, CurrentToken->Type);
 
-		if (!_ExpectedToken(TokenType::ID))
+		if (!ExpectedToken(TokenType::ID))
 			return {};
 
-		FristArgument->ID = new AST::Identifier(_CurrentToken, _CurrentToken->Value);
+		FristArgument->ID = new AST::Identifier(CurrentToken, CurrentToken->Value);
 
-		if (_NextToken->Type == TokenType::EQUALS)
+		if (NextToken->Type == TokenType::EQUALS)
 		{
-			delete _NextToken;
-			_Advance();
-			_Advance();
+			delete NextToken;
+			Advance();
+			Advance();
 
-			FristArgument->Value = _ParseExpression(Precedence::LOWEST, FristArgumentType);
+			FristArgument->Value = ParseExpression(Precedence::LOWEST, FristArgumentType);
 		}
 
 		Params.emplace_back(FristArgument);
 
-		while (_NextToken->Type == TokenType::COMMA)
+		while (NextToken->Type == TokenType::COMMA)
 		{
-			delete _NextToken;
-			_Advance();
-			_Advance();
+			delete NextToken;
+			Advance();
+			Advance();
 
-			TokenType ArgumentType = _CurrentToken->Type;
-			AST::VarStatement* Argument = new AST::VarStatement(_CurrentToken, _CurrentToken->Type);
+			TokenType ArgumentType = CurrentToken->Type;
+			AST::VarStatement* Argument = new AST::VarStatement(CurrentToken, CurrentToken->Type);
 
-			if (!_ExpectedToken(TokenType::ID))
+			if (!ExpectedToken(TokenType::ID))
 				return {};
 
-			Argument->ID = new AST::Identifier(_CurrentToken, _CurrentToken->Value);
+			Argument->ID = new AST::Identifier(CurrentToken, CurrentToken->Value);
 
-			if (_NextToken->Type == TokenType::EQUALS)
+			if (NextToken->Type == TokenType::EQUALS)
 			{
-				delete _NextToken;
-				_Advance();
-				_Advance();
+				delete NextToken;
+				Advance();
+				Advance();
 
-				Argument->Value = _ParseExpression(Precedence::LOWEST, ArgumentType);
+				Argument->Value = ParseExpression(Precedence::LOWEST, ArgumentType);
 			}
 
 			Params.emplace_back(Argument);
 		}
 
-		if (!_ExpectedToken(TokenType::RPAREN))
+		if (!ExpectedToken(TokenType::RPAREN))
 			return {};
-		delete _CurrentToken;
+		delete CurrentToken;
 
 		return Params;
 	}
 
-	AST::Block* Parser::_ParseBlock()
+	AST::Block* Parser::ParseBlock()
 	{
-		AST::Block* Block = new AST::Block(_CurrentToken);
+		AST::Block* Block = new AST::Block(CurrentToken);
 
-		_Advance();
-		while (_CurrentToken->Type != TokenType::RBRACE && _CurrentToken->Type != TokenType::END_OF_FILE)
+		Advance();
+		while (CurrentToken->Type != TokenType::RBRACE && CurrentToken->Type != TokenType::END_OF_FILE)
 		{
-			AST::Statement* statement = _ParseStatement();
+			AST::Statement* statement = ParseStatement();
 
 			if (statement != nullptr)
 				Block->Statements.emplace_back(statement);
 
-			_Advance();
+			Advance();
+		}
+		delete CurrentToken;
+		if(NextToken->Type == TokenType::RBRACE)
+		{
+			Advance();
+			delete CurrentToken;
 		}
 
 		return Block;
 	}
 
-	Precedence Parser::_PeekPrecedence()
+	Precedence Parser::PeekPrecedence()
 	{
-		return Precedences[_NextToken->Type];
+		return Precedences[NextToken->Type];
 	}
 
-	PrefixParseFns DefinePrefixFns()
-	{
-		PrefixParseFns Fns;
-		Fns[TokenType::FUNCTION] = (PrefixParseFn)ParseFunction;
-		Fns[TokenType::ID] = (PrefixParseFn)ParseIdentifier;
-		Fns[TokenType::INT] = (PrefixParseFn)ParseInteger;
-		//fns[TokenType::C_IF] = (PrefixParseFn)_ParseIf;
-		Fns[TokenType::LPAREN] = (PrefixParseFn)ParseGroupedExpression;
-		Fns[TokenType::MINUS] = (PrefixParseFn)ParsePrefixExpression;
-		Fns[TokenType::NOT] = (PrefixParseFn)ParsePrefixExpression;
-		Fns[TokenType::FALSE] = (PrefixParseFn)ParseBoolean;
-		Fns[TokenType::TRUE] = (PrefixParseFn)ParseBoolean;
-		return Fns;
-	}
-
-	PrefixParseFns Parser::_RegisterPrefixFns()
+	PrefixParseFns Parser::RegisterPrefixFns()
 	{
 		static PrefixParseFns Fns = DefinePrefixFns();
 		return Fns;
 	}
 
-	InfixParseFns DefineInfixFns()
-	{
-		InfixParseFns fns;
-		fns[TokenType::PLUS] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::MINUS] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::DIVISION] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::MULTIPLICATION] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::EQUALS_TO] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::NOT_EQUALS] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::LESS_THAN] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::GREATER_THAN] = (InfixParseFn)ParseInfixExpression;
-		fns[TokenType::LPAREN] = (InfixParseFn)ParseCall;
-
-		return fns;
-	}
-
-	InfixParseFns Parser::_RegisterInfixFns()
+	InfixParseFns Parser::RegisterInfixFns()
 	{
 		static InfixParseFns Fns = DefineInfixFns();
 		return Fns;

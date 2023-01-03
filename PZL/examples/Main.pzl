@@ -1,5 +1,4 @@
-
-func Main() : int
+func Main(int x) : int
 {
-	return 0;
+	x + 2;
 }

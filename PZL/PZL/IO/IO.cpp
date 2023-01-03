@@ -17,7 +17,7 @@ namespace PZL::IO
 		std::string Line;
 		while (std::getline(IFile, Line))
 		{
-			Content.append(Line);
+			Content.append(Line + '\n');
 		}
 
 		char* Buffer = (char*)calloc(Content.length(), sizeof(char));

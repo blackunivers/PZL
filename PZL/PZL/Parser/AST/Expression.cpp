@@ -26,16 +26,16 @@ namespace PZL::AST
 		return ASTNodeType::Identifier;
 	}
 
-	Integer::Integer(Token* TK, Type::Int32 value) : Expression(TK)
+	Integer32::Integer32(Token* TK, Type::Int32 Value) : Expression(TK)
 	{
 		this->Value = Value;
 	}
 
-	Integer::~Integer()
+	Integer32::~Integer32()
 	{
 	}
 
-	const char* Integer::ToString() const
+	const char* Integer32::ToString() const
 	{
 		std::string Str = std::to_string(Value.Data);
 		char* NStr = (char*)calloc(Str.length(), sizeof(char));
@@ -44,9 +44,9 @@ namespace PZL::AST
 		return NStr;
 	}
 
-	const ASTNodeType Integer::Type() const
+	const ASTNodeType Integer32::Type() const
 	{
-		return ASTNodeType::Integer;
+		return ASTNodeType::Integer32;
 	}
 
 	Boolean::Boolean(Token* TK, Type::Bool value) : Expression(TK)
@@ -213,18 +213,53 @@ namespace PZL::AST
 		}
 
 		std::stringstream ss;
-		ss << Fn->ToString() << "(" << Args << ");";
+		ss << Fn->ToString() << "(" << Args << ")";
 		std::string Str = ss.str();
 
 		char* NStr = (char*)calloc(Str.length(), sizeof(char));
 		strcpy(NStr, Str.c_str());
 		
+		free(Args);
 		return NStr;
 	}
 
 	const ASTNodeType Call::Type() const
 	{
 		return ASTNodeType::Call;
+	}
+
+	If::If(Token* TK, Expression* Condition, Block* IfBlock, Block* ElseBlock) : Expression(TK)
+	{
+		this->Condition = Condition;
+		this->IfBlock = IfBlock;
+		this->ElseBlock = ElseBlock;
+	}
+
+	If::~If()
+	{
+		delete Condition;
+		delete IfBlock;
+		delete ElseBlock;
+	}
+
+	const char* If::ToString() const
+	{
+		std::stringstream ss;
+		ss << "if " << Condition->ToString() << " " << IfBlock->ToString();
+
+		if (ElseBlock != nullptr)
+			ss << "\telse" << ElseBlock->ToString();
+
+		std::string Str = ss.str();
+		char* NStr = (char*)calloc(Str.length(), sizeof(char));
+		strcpy(NStr, Str.c_str());
+
+		return NStr;
+	}
+
+	const ASTNodeType If::Type() const
+	{
+		return ASTNodeType::If;
 	}
 
 }

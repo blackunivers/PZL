@@ -8,22 +8,22 @@ namespace PZL::Type
 
 	// Represents both signed and unsigned numbers.
 	template<typename T>
-	struct BasicInt : public Object<>
+	struct BasicInt : public Object
 	{
 	public:
 		BasicInt() : Data(0)
 		{
-			OType = ObjectType::Int;
+			Type = ObjectType::Int32;
 		}
 
 		BasicInt(const T& Value) : Data(Value)
 		{
-			OType = ObjectType::Int;
+			Type = ObjectType::Int32;
 		}
 
 		BasicInt(T&& Value) : Data(Value)
 		{
-			OType = ObjectType::Int;
+			Type = ObjectType::Int32;
 		}
 
 		// Returns its current value as a string.
@@ -34,69 +34,8 @@ namespace PZL::Type
 			strcpy(NStr, Str.c_str());
 			return NStr;
 		}
-
-		template<typename Type>
-		inline BasicInt<T>& operator+=(Type A)
-		{
-			this->Data += A;
-			return *this;
-		}
-
-		template<typename Type>
-		inline BasicInt<T>& operator-=(Type A)
-		{
-			this->Data -= A;
-			return *this;
-		}
-
-		template<typename Type>
-		inline BasicInt<T>& operator*=(Type A)
-		{
-			this->Data *= A;
-			return *this;
-		}
-
-		template<typename Type>
-		inline BasicInt<T>& operator/=(Type A)
-		{
-			this->Data /= A;
-			return *this;
-		}
-
-		template<typename Type>
-		inline BasicInt<T>& operator%=(Type A)
-		{
-			this->Data %= A;
-			return *this;
-		}
-
-		inline BasicInt<T>& operator++()
-		{ 
-			this->Data++;
-			return *this;
-		}
-
-		inline BasicInt<T> operator++(int)
-		{
-			BasicInt<T> Tmp = *this;
-			++* this;
-			return Tmp;
-		}
-
-		inline bool operator>(const BasicInt<T>& A)
-		{
-			return Data > A.Data;
-		}
-
-		// Returns the current value as the type specified in the template.
-		operator T&()
-		{
-			return Data;
-		}
 	public:
 		T Data;
-	private:
-		friend bool operator>(const BasicInt<T>& A, Size B);
 	};
 
 	// basic integer types.
@@ -109,9 +48,4 @@ namespace PZL::Type
 	using Int64 = BasicInt<signed long long>;
 	using UInt64 = BasicInt<unsigned long long>;
 
-	template<typename T>
-	inline bool operator>(const BasicInt<T>& A, Size B)
-	{
-		return A.Data > B;
-	}
 }

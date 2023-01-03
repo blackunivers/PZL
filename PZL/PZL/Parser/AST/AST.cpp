@@ -18,7 +18,7 @@ namespace PZL::AST
 
 	Expression::Expression(Token* TK)
 	{
-		this->TK = TK;
+			this->TK = TK;
 	}
 
 	Expression::~Expression()

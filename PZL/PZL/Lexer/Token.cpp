@@ -4,7 +4,7 @@
 namespace PZL
 {
 
-    const char* TokenTypeToString(TokenType Type)
+    const char* Token::TokenTypeToString(TokenType Type)
     {
         switch (Type)
         {
@@ -49,6 +49,13 @@ namespace PZL
         case TokenType::GREATER_THAN:
             return "GreaterThan";
 
+        case TokenType::IF:
+            return "If";
+        case TokenType::ELIF:
+            return "Elif";
+        case TokenType::ELSE:
+            return "Else";
+
         case TokenType::INT:
             return "Int";
         case TokenType::FALSE:
@@ -77,22 +84,28 @@ namespace PZL
 
     static int DefineKeyWords()
     {
-        KeyWords["void"] = TokenType::TYPE_VOID;
-        KeyWords["int"] = TokenType::TYPE_INT;
-        KeyWords["bool"] = TokenType::TYPE_BOOL;
-        KeyWords["false"] = TokenType::FALSE;
-        KeyWords["true"] = TokenType::TRUE;
-        KeyWords["func"] = TokenType::FUNCTION;
-        KeyWords["return"] = TokenType::RETURN;
+        Token::KeyWords["void"] = TokenType::TYPE_VOID;
+        Token::KeyWords["int"] = TokenType::TYPE_INT;
+        Token::KeyWords["bool"] = TokenType::TYPE_BOOL;
+        
+        Token::KeyWords["if"] = TokenType::IF;
+        Token::KeyWords["elif"] = TokenType::ELIF;
+        Token::KeyWords["else"] = TokenType::ELSE;
+
+        Token::KeyWords["false"] = TokenType::FALSE;
+        Token::KeyWords["true"] = TokenType::TRUE;
+
+        Token::KeyWords["func"] = TokenType::FUNCTION;
+        Token::KeyWords["return"] = TokenType::RETURN;
 
         return 0;
     }
 
-    TokenType LookUpTokenType(const char* ID)
+    TokenType Token::LookUpTokenType(const char* ID)
     {
         static int Unused = DefineKeyWords();
 
-        for (auto& [Key, Word] : KeyWords)
+        for (auto& [Key, Word] : Token::KeyWords)
         {
             if (std::strcmp(Key, ID) == 0)
                 return Word;

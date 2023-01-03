@@ -5,20 +5,42 @@ namespace PZL
 	// Represents object types.
 	enum class ObjectType
 	{
-		Int,
+		Int32 = 1,
+
 		Bool,
-		Char,
 		Null,
+
+		Error = -1,
+		Return = 4,
+		Function,
 	};
 
 	// Represents an object.
-	template<typename TTS = const char*>
 	struct Object
 	{
-		// Object Type
-		ObjectType OType;
+	public:
+		Object() {};
+		virtual ~Object() {}
 
 		// Returns the object as a string.
-		virtual TTS ToString() const = 0;
+		virtual const char* ToString() const = 0;
+	public:
+		// Object Type
+		ObjectType Type;
+	public:
+	
+		static inline const char* ObjectTypeToString(ObjectType Type)
+		{
+			switch (Type)
+			{
+			case ObjectType::Int32:
+				return "Int32";
+			case ObjectType::Bool:
+				return "Bool";
+			}
+
+			return "Unknown";
+		}
 	};
+
 }

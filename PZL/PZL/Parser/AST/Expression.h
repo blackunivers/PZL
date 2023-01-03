@@ -22,11 +22,11 @@ namespace PZL::AST
 		const char* ID;
 	};
 
-	struct Integer : public Expression
+	struct Integer32 : public Expression
 	{
 	public:
-		Integer(Token* TK, Type::Int32 value = 0);
-		~Integer();
+		Integer32(Token* TK, Type::Int32 Value = 0);
+		~Integer32();
 
 		virtual const char* ToString() const override;
 
@@ -102,6 +102,20 @@ namespace PZL::AST
 	public:
 		Expression* Fn;
 		std::vector<Expression*> Arguments;
+	};
+
+	struct If : public Expression
+	{
+	public:
+		If(Token* TK, Expression* Condition = nullptr, Block* IfBlock = nullptr, Block* ElseBlock = nullptr);
+		~If();
+
+		virtual const char* ToString() const override;
+		virtual const ASTNodeType Type() const override;
+	public:
+		Expression* Condition;
+		Block* IfBlock;
+		Block* ElseBlock;
 	};
 
 }

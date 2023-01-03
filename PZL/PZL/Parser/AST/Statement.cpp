@@ -26,7 +26,9 @@ namespace PZL::AST
 		std::stringstream ss;
 		ss << TK->Value << " " << ID->ID;
 		if (Value != nullptr)
-			ss << " = " << Value->ToString();
+			ss << " = " << Value->ToString() << ';';
+		else
+			ss << " 'funcion argument'";
 
 		std::string Str = ss.str();
 		char* NStr = (char*)calloc(Str.length(), sizeof(char));
@@ -47,6 +49,7 @@ namespace PZL::AST
 
 	ExpressionStatement::~ExpressionStatement()
 	{
+		delete Value;
 	}
 
 	const char* ExpressionStatement::ToString() const

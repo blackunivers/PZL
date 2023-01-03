@@ -30,9 +30,6 @@
     <ClCompile Include="PZL\System\Memory.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
-    <ClCompile Include="PZL\Types\Str.cpp">
-      <Filter>Archivos de origen</Filter>
-    </ClCompile>
     <ClCompile Include="PZL\IO\IO.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
@@ -49,6 +46,18 @@
       <Filter>Archivos de origen</Filter>
     </ClCompile>
     <ClCompile Include="PZL\Parser\AST\Expression.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Evaluator\Evaluator.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Types\Return.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Types\Error.cpp">
+      <Filter>Archivos de origen</Filter>
+    </ClCompile>
+    <ClCompile Include="PZL\Types\Function.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,9 +86,6 @@
     <ClInclude Include="PZL\System\Memory.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="PZL\Types\Str.h">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
     <ClInclude Include="PZL\Types\Size.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
@@ -105,6 +111,33 @@
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="PZL\Parser\Precedence.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Types\Null.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\PrefixParseFns.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Parser\InfixParseFns.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Evaluator\Evaluator.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Types\Global.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Types\Return.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Types\Error.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Evaluator\Environment.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="PZL\Types\Function.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

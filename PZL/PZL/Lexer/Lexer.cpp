@@ -8,9 +8,9 @@ namespace PZL
 
     Lexer::Lexer(const char* Source)
     {
-        _Source = Source;
-        _Current = Source[0];
-        _Len = strlen(Source);
+        this->Source = Source;
+        Current = this->Source[0];
+        Len = strlen(Source);
     }
 
     Lexer::~Lexer()
@@ -21,170 +21,174 @@ namespace PZL
     {
         Token* TK;
 
-        _SkipWhiteSpace();
+        SkipWhiteSpace();
 
-        switch (_Current)
+        switch (Current)
         {
         case '=':
-            if (_PeekCharacter() == '=')
-                TK = _AdvanceWithTwo(TokenType::EQUALS_TO);
+            if (PeekCharacter() == '=')
+                TK = AdvanceWithTwo(TokenType::EQUALS_TO);
             else
-                TK = _AdvanceWith(TokenType::EQUALS);
+                TK = AdvanceWith(TokenType::EQUALS);
             break;
         case '+':
-            TK = _AdvanceWith(TokenType::PLUS);
+            TK = AdvanceWith(TokenType::PLUS);
             break;
         case '-':
-            TK = _AdvanceWith(TokenType::MINUS);
+            TK = AdvanceWith(TokenType::MINUS);
             break;
         case '*':
-            TK = _AdvanceWith(TokenType::MULTIPLICATION);
+            TK = AdvanceWith(TokenType::MULTIPLICATION);
             break;
         case '/':
-            TK = _AdvanceWith(TokenType::DIVISION);
+            TK = AdvanceWith(TokenType::DIVISION);
             break;
         case '(':
-            TK = _AdvanceWith(TokenType::LPAREN);
+            TK = AdvanceWith(TokenType::LPAREN);
             break;
         case ')':
-            TK = _AdvanceWith(TokenType::RPAREN);
+            TK = AdvanceWith(TokenType::RPAREN);
             break;
         case '{':
-            TK = _AdvanceWith(TokenType::LBRACE);
+            TK = AdvanceWith(TokenType::LBRACE);
             break;
         case '}':
-            TK = _AdvanceWith(TokenType::RBRACE);
+            TK = AdvanceWith(TokenType::RBRACE);
             break;
         case ',':
-            TK = _AdvanceWith(TokenType::COMMA);
+            TK = AdvanceWith(TokenType::COMMA);
             break;
         case '.':
-            TK = _AdvanceWith(TokenType::DOT);
+            TK = AdvanceWith(TokenType::DOT);
             break;
         case ':':
-            TK = _AdvanceWith(TokenType::COLON);
+            TK = AdvanceWith(TokenType::COLON);
             break;
         case ';':
-            TK = _AdvanceWith(TokenType::SEMICOLON);
+            TK = AdvanceWith(TokenType::SEMICOLON);
             break;
         case '!':
-            if (_PeekCharacter() == '=')
-                TK = _AdvanceWithTwo(TokenType::NOT_EQUALS);
+            if (PeekCharacter() == '=')
+                TK = AdvanceWithTwo(TokenType::NOT_EQUALS);
             else
-                TK = _AdvanceWith(TokenType::NOT);
+                TK = AdvanceWith(TokenType::NOT);
             break;
         case '>':
-            TK = _AdvanceWith(TokenType::GREATER_THAN);
+            TK = AdvanceWith(TokenType::GREATER_THAN);
             break;
         case '<':
-            TK = _AdvanceWith(TokenType::LESS_THAN);
+            TK = AdvanceWith(TokenType::LESS_THAN);
             break;
         case '\0':
-            TK = _AdvanceWith(TokenType::END_OF_FILE);
+            TK = AdvanceWith(TokenType::END_OF_FILE);
             break;
         default:
 
-            if (std::isalpha(_Current) || _Current == '_')
-                return _AdvanceWithID();
-            else if (std::isdigit(_Current))
-                return _AdvanceWithDigit();
+            if (std::isalpha(Current) || Current == '_')
+                return AdvanceWithID();
+            else if (std::isdigit(Current))
+                return AdvanceWithDigit();
 
 
-            TK = new Token(TokenType::ILLEGAL, _Current);
+            TK = new Token(TokenType::ILLEGAL, Current, Line);
             break;
         }
 
         return TK;
     }
 
-    void Lexer::_SkipWhiteSpace()
+    void Lexer::SkipWhiteSpace()
     {
-        while (_Current == ' ' || _Current == '\t' || _Current == '\n' || _Current == '\r')
-            _Advance();
+        while (Current == ' ' || Current == '\t' || Current == '\n' || Current == '\r')
+        {
+            if (Current == '\n')
+                Line++;
+            Advance();
+        }
     }
 
-    void Lexer::_Advance()
+    void Lexer::Advance()
     {
-        _Index++;
-        if (_Index > _Len)
-            _Current = '\0';
+        Index++;
+        if (Index > Len)
+            Current = '\0';
         else
-            _Current = _Source[_Index];
+            Current = Source[Index];
     }
 
-    char Lexer::_PeekCharacter()
+    char Lexer::PeekCharacter()
     {
-        if ((_Index + 1) > _Len)
+        if ((Index + 1) > Len)
             return ' ';
-        return _Source[_Index + 1];
+        return Source[Index + 1];
     }
 
-    Token* Lexer::_AdvanceWith(TokenType Type)
+    Token* Lexer::AdvanceWith(TokenType Type)
     {
-        char Value = _Current;
-        _Advance();
+        char Value = Current;
+        Advance();
 
-        return new Token(Type, Value);
+        return new Token(Type, Value, Line);
     }
 
-    Token* Lexer::_AdvanceWithTwo(TokenType Type)
+    Token* Lexer::AdvanceWithTwo(TokenType Type)
     {
         char* Value = (char*)calloc(3, sizeof(char));
-        Value[0] = _Current;
-        _Advance();
-        Value[1] = _Current;
-        _Advance();
+        Value[0] = Current;
+        Advance();
+        Value[1] = Current;
+        Advance();
         Value[2] = '\0';
 
-        return new Token(Type, Value);
+        return new Token(Type, Value, Line);
     }
 
-    Token* Lexer::_AdvanceWithID()
+    Token* Lexer::AdvanceWithID()
     {
         char* Value = (char*)calloc(2, sizeof(char));
-        Value[0] = _Current;
+        Value[0] = Current;
         Value[1] = '\0';
-        _Advance();
+        Advance();
 
-        while (std::isalnum(_Current) || _Current == '_')
+        while (std::isalnum(Current) || Current == '_')
         {
             Value = (char*)realloc(Value, (strlen(Value) + 2) * sizeof(char));
             char* Tmp = (char*)calloc(2, sizeof(char));
-            Tmp[0] = _Current;
+            Tmp[0] = Current;
             Tmp[1] = '\0';
             strcat(Value, Tmp);
             
-            _Advance();
+            Advance();
 
             free(Tmp);
         }
 
-        TokenType Type = LookUpTokenType(Value);
+        TokenType Type = Token::LookUpTokenType(Value);
 
-        return new Token(Type, Value);
+        return new Token(Type, Value, Line);
     }
 
-    Token* Lexer::_AdvanceWithDigit()
+    Token* Lexer::AdvanceWithDigit()
     {
         char* Value = (char*)calloc(2, sizeof(char));
-        Value[0] = _Current;
+        Value[0] = Current;
         Value[1] = '\0';
-        _Advance();
+        Advance();
 
-        while (std::isdigit(_Current))
+        while (std::isdigit(Current))
         {
             Value = (char*)realloc(Value, (strlen(Value) + 2) * sizeof(char));
             char* Tmp = (char*)calloc(2, sizeof(char));
-            Tmp[0] = _Current;
+            Tmp[0] = Current;
             Tmp[1] = '\0';
             strcat(Value, Tmp);
 
-            _Advance();
+            Advance();
 
             free(Tmp);
         }
 
-        return new Token(TokenType::INT, Value);
+        return new Token(TokenType::INT, Value, Line);
     }
 
 }

@@ -17,20 +17,21 @@ namespace PZL
 		// Returns a pointer to a token corresponding to the passed string. 
 		Token* NextToken();
 
-	private:
-		void _SkipWhiteSpace();
-		void _Advance();
-		char _PeekCharacter();
+	public:
+		void SkipWhiteSpace();
+		void Advance();
+		char PeekCharacter();
 
-		Token* _AdvanceWith(TokenType Type); 
-		Token* _AdvanceWithTwo(TokenType Type);
-		Token* _AdvanceWithID();
-		Token* _AdvanceWithDigit();
+		Token* AdvanceWith(TokenType Type); 
+		Token* AdvanceWithTwo(TokenType Type);
+		Token* AdvanceWithID();
+		Token* AdvanceWithDigit();
 
-	private:
-		const char* _Source;
-		Type::Size _Len;
-		Type::Size _Index;
-		Type::Char _Current;
+	public:
+		const char* Source;
+		size_t Len;
+		size_t Index;
+		int Line = 1;
+		char Current;
 	};
 }

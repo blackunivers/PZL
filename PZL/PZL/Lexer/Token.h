@@ -34,9 +34,9 @@ namespace PZL
 		GREATER_THAN,
 
 		// flow controllers
-		C_IF,
-		C_ELIF,
-		C_ELSE,
+		IF,
+		ELIF,
+		ELSE,
 
 		//Values
 		INT,
@@ -57,28 +57,28 @@ namespace PZL
 		ILLEGAL,
 	};
 
-	inline std::unordered_map<const char*, TokenType> KeyWords = {};
-	const char* TokenTypeToString(TokenType Type);
-	TokenType LookUpTokenType(const char* ID);
-
 	// Class mainly used to represent a token.
 	struct Token
 	{
+	public:
 		TokenType Type;
 		char* Value;
-
-		Token(TokenType Type, char Value)
+		int Line;
+	public:
+		Token(TokenType Type, char Value, int Line)
 		{
 			this->Type = Type;
 			this->Value = (char*)calloc(2, sizeof(char));
 			this->Value[0] = Value;
 			this->Value[1] = '\0';
+			this->Line = Line;
 		}
 
-		Token(TokenType Type, const char* Value)
+		Token(TokenType Type, const char* Value, int Line)
 		{
 			this->Type = Type;
 			this->Value = (char*)Value;
+			this->Line = Line;
 		}
 
 		~Token()
@@ -97,5 +97,11 @@ namespace PZL
 
 			return NStr;
 		}
+	public:
+		static inline std::unordered_map<const char*, TokenType> KeyWords = {};
+	public:
+		static const char* TokenTypeToString(TokenType Type);
+		static TokenType LookUpTokenType(const char* ID);
+
 	};
 }
