@@ -4,7 +4,7 @@
 PZL is an interpreted language, with functional programming, static typing and oriented to the creation of video games.
 
 ## Status
-A parser capable of parsing some types of variables has already been implemented.
+a basic evaluator has been implemented.
 
 ## LICENSE
 MIT License
