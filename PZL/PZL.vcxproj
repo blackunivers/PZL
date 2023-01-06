@@ -94,7 +94,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;$(SolutionDir)/PZL/PZL;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -113,7 +113,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;$(SolutionDir)/PZL/PZL;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -132,7 +132,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;$(SolutionDir)/PZL/PZL;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -151,7 +151,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;$(SolutionDir)/PZL/PZL;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/PZL/include;</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>PCH.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -163,16 +163,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="include\PCH.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PCH.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PCH.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PCH.h</PrecompiledHeaderFile>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PCH.h</PrecompiledHeaderFile>
-    </ClCompile>
     <ClCompile Include="PZL\Evaluator\Evaluator.cpp" />
     <ClCompile Include="PZL\IO\IO.cpp" />
     <ClCompile Include="PZL\Lexer\Lexer.cpp" />
@@ -187,8 +177,47 @@
     <ClCompile Include="PZL\Types\Function.cpp" />
     <ClCompile Include="PZL\Types\Return.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\PCH.cpp" />
+    <ClCompile Include="src\PZL\Evaluator\Evaluator.cpp" />
+    <ClCompile Include="src\PZL\IO\IO.cpp" />
+    <ClCompile Include="src\PZL\Lexer\Lexer.cpp" />
+    <ClCompile Include="src\PZL\Lexer\Token.cpp" />
+    <ClCompile Include="src\PZL\Parser\AST\AST.cpp" />
+    <ClCompile Include="src\PZL\Parser\AST\Expression.cpp" />
+    <ClCompile Include="src\PZL\Parser\AST\Statement.cpp" />
+    <ClCompile Include="src\PZL\Parser\Parser.cpp" />
+    <ClCompile Include="src\PZL\System\Memory.cpp" />
+    <ClCompile Include="src\PZL\Types\Bool.cpp" />
+    <ClCompile Include="src\PZL\Types\Error.cpp" />
+    <ClCompile Include="src\PZL\Types\Function.cpp" />
+    <ClCompile Include="src\PZL\Types\Return.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\PZL\Evaluator\Environment.h" />
+    <ClInclude Include="include\PZL\Evaluator\Evaluator.h" />
+    <ClInclude Include="include\PZL\IO\IO.h" />
+    <ClInclude Include="include\PZL\Lexer\Lexer.h" />
+    <ClInclude Include="include\PZL\Lexer\Token.h" />
+    <ClInclude Include="include\PZL\Parser\AST\AST.h" />
+    <ClInclude Include="include\PZL\Parser\AST\Expression.h" />
+    <ClInclude Include="include\PZL\Parser\AST\Statement.h" />
+    <ClInclude Include="include\PZL\Parser\InfixParseFns.h" />
+    <ClInclude Include="include\PZL\Parser\Parser.h" />
+    <ClInclude Include="include\PZL\Parser\Precedence.h" />
+    <ClInclude Include="include\PZL\Parser\PrefixParseFns.h" />
+    <ClInclude Include="include\PZL\PZL.h" />
+    <ClInclude Include="include\PZL\System\Error.h" />
+    <ClInclude Include="include\PZL\System\Memory.h" />
+    <ClInclude Include="include\PZL\Types\Base.h" />
+    <ClInclude Include="include\PZL\Types\Bool.h" />
+    <ClInclude Include="include\PZL\Types\Error.h" />
+    <ClInclude Include="include\PZL\Types\Function.h" />
+    <ClInclude Include="include\PZL\Types\Global.h" />
+    <ClInclude Include="include\PZL\Types\Int.h" />
+    <ClInclude Include="include\PZL\Types\Null.h" />
+    <ClInclude Include="include\PZL\Types\Object.h" />
+    <ClInclude Include="include\PZL\Types\Return.h" />
+    <ClInclude Include="include\PZL\Types\Size.h" />
     <ClInclude Include="PZL\Evaluator\Environment.h" />
     <ClInclude Include="PZL\Evaluator\Evaluator.h" />
     <ClInclude Include="PZL\Lexer\Token.h" />

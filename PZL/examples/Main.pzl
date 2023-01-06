@@ -1,4 +1,0 @@
-func Main(int x) : int
-{
-	x + 2;
-}
