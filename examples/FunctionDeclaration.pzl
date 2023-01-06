@@ -1,0 +1,3 @@
+
+func Sum(int a, int b) : int;
+func Main () : int;
