@@ -1,7 +1,7 @@
 # Point Zero Language (.PZL)
 
 ## ¿Que es PZL?
-PZL es un lenguage de programación interpretado de tipado estatico y orientado a la creación de videojuegos.
+PZL es un lenguaje de programación interpretado de tipado estático y orientado a la creación de videojuegos.
 
 ## Estado
 El interprete actual ya cuenta con un lexer funcional, un parser capaz que parsear la sintaxis basica del lenguage y un evaluador para operaciones aritmeticas simples.
