@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types/Object.h"
+#include "PZL/Types/Object.h"
 
 namespace PZL::Type
 {
@@ -14,9 +14,7 @@ namespace PZL::Type
 
 		~Null()
 		{
-
 		}
 
-		inline virtual const char* ToString() const override { return "Null"; }
 	};
 }

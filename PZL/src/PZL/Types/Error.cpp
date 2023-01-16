@@ -1,21 +1,16 @@
 #include "PCH.h"
-#include "Error.h"
+#include "PZL/Types/Error.h"
 
-namespace PZL::Type
+namespace PZL
 {
 
-    Error::Error(const char* What)
-    {
-        Type = ObjectType::Error;
-        this->What = What;
-    }
+	Error::Error(const char* What, ErrorType ErrType) : What(What), ErrType(ErrType)
+	{
+		Type = ObjectType::Error;
+	}
 
-    Error::~Error()
-    {
-    }
+	Error::~Error()
+	{
+	}
 
-    const char* Error::ToString() const
-    {
-        return What;
-    }
 }

@@ -1,13 +1,14 @@
 #pragma once
 
-#include "Types/Base.h"
-#include "Types/Null.h"
-#include "Types/Bool.h"
-#include "Types/Int.h"
-#include "Types/Size.h"
+#include "PZL/Types/Base.h"
+#include "PZL/Types/Null.h"
+#include "PZL/Types/Bool.h"
+#include "PZL/Types/Int.h"
+#include "PZL/Types/Float.h"
+#include "PZL/Types/Size.h"
+#include "PZL/Types/Error.h"
 
-#include "Types/Error.h"
-#include "Types/Return.h"
-#include "Types/Function.h"
+#include "PZL/Types/Global.h"
 
-#include "Types/Global.h"
+#include "PZL/Types/Pair.h"
+#include "PZL/Types/StaticArray.h"

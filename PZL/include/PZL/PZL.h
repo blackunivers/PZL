@@ -2,7 +2,6 @@
 
 #include "PZL/Types/Base.h"
 
-#include "PZL/System/Error.h"
 #include "PZL/System/Memory.h"
 
 #include "PZL/IO/IO.h"
@@ -19,6 +18,7 @@
 
 #include "PZL/Evaluator/Evaluator.h"
 #include "PZL/Evaluator/Environment.h"
+#include "PZL/Evaluator/Function/Function.h"
 
 namespace PZL
 {

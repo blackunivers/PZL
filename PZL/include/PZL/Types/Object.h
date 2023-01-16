@@ -2,17 +2,30 @@
 
 namespace PZL
 {
+
+	enum class TokenType;
+
 	// Represents object types.
 	enum class ObjectType
 	{
-		Int32 = 1,
+		Null = -1,
+		Error = -2,
 
+		Int8 = 1,
+		UInt8,
+		Int16,
+		UInt16,
+		Int32,
+		UInt32,
+		Int64,
+		UInt64,
+		Float32,
+		Float64,
 		Bool,
-		Null,
 
-		Error = -1,
-		Return = 4,
-		Function,
+
+		Pair,
+		StaticArray,
 	};
 
 	// Represents an object.
@@ -21,26 +34,36 @@ namespace PZL
 	public:
 		Object() {};
 		virtual ~Object() {}
-
-		// Returns the object as a string.
-		virtual const char* ToString() const = 0;
 	public:
 		// Object Type
 		ObjectType Type;
 	public:
-	
-		static inline const char* ObjectTypeToString(ObjectType Type)
-		{
-			switch (Type)
-			{
-			case ObjectType::Int32:
-				return "Int32";
-			case ObjectType::Bool:
-				return "Bool";
-			}
+		virtual Object* operator+(Object*) { return 0; }
+		virtual Object* operator-(Object*) { return 0; }
+		virtual Object* operator*(Object*) { return 0; }
+		virtual Object* operator/(Object*) { return 0; };
+		virtual bool operator==(Object*) { return 0; }
+		virtual bool operator!=(Object*) { return 0; }
+	public:
+		static ObjectType TokenTypeToObjectType(TokenType Type);
 
-			return "Unknown";
-		}
+		static const char* ObjectTypeToString(ObjectType Type);
+
+		template<typename To>
+		static To As(Object* Input);
+
+		static bool IsNumber(ObjectType Type);
+		static bool IsInteger(ObjectType Type);
+		static bool IsFloat(ObjectType Type);
+		static bool IsSigned(ObjectType Type);
+		static bool IsUnsigned(ObjectType Type);
+
 	};
+
+	template<typename To>
+	inline To Object::As(Object* Input) 
+	{ 
+		return ((To)Input); 
+	}
 
 }

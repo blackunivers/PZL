@@ -1,7 +1,6 @@
 
-
-int sum = (1 + 1);
-bool IsActive = false;
-int A = IsActive + 3 / 1;
-bool B;
-int C;
+i8 a = 20;
+i64 b = 82727722323223;
+f32 c = 212.33;
+f64 d = 343.434343434;
+bool e = 1.0;

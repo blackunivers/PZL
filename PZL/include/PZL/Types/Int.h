@@ -1,51 +1,64 @@
 #pragma once
 
-#include "Types/Size.h"
-#include "Types/Object.h"
+#include "PZL/Types/Object.h"
 
 namespace PZL::Type
 {
 
 	// Represents both signed and unsigned numbers.
-	template<typename T>
+	template<typename T, ObjectType ObjType>
 	struct BasicInt : public Object
 	{
 	public:
+		using TypeInt = T;
+	public:
 		BasicInt() : Data(0)
 		{
-			Type = ObjectType::Int32;
+			Type = ObjType;
 		}
 
 		BasicInt(const T& Value) : Data(Value)
 		{
-			Type = ObjectType::Int32;
+			Type = ObjType;
 		}
 
 		BasicInt(T&& Value) : Data(Value)
 		{
-			Type = ObjectType::Int32;
+			Type = ObjType;
 		}
 
-		// Returns its current value as a string.
-		virtual const char* ToString() const override
+		explicit BasicInt(BasicInt<T, ObjType>* B) : Data((T)B->Data)
 		{
-			std::string Str = std::to_string(Data);
-			char* NStr = (char*)calloc(Str.length(), sizeof(char));
-			strcpy(NStr, Str.c_str());
-			return NStr;
+			Type = ObjType;
 		}
+
+		template<typename T, ObjectType ObjType>
+		explicit BasicInt(BasicInt<T, ObjType>* B) : Data((T)B->Data)
+		{
+			Type = ObjType;
+		}
+
+		virtual Object* operator+(Object* B) override { return new BasicInt<T, ObjType>(this->Data + ((BasicInt<T, ObjType>*)B)->Data); }
+		virtual Object* operator-(Object* B) override { return new BasicInt<T, ObjType>(this->Data - ((BasicInt<T, ObjType>*)B)->Data); }
+		virtual Object* operator*(Object* B) override { return new BasicInt<T, ObjType>(this->Data * ((BasicInt<T, ObjType>*)B)->Data); }
+		virtual Object* operator/(Object* B) override { return new BasicInt<T, ObjType>(this->Data / ((BasicInt<T, ObjType>*)B)->Data); }
+		virtual bool operator==(Object* B) override { return new BasicInt<T, ObjType>(this->Data == ((BasicInt<T, ObjType>*)B)->Data); }
+		virtual bool operator!=(Object* B) override { return new BasicInt<T, ObjType>(this->Data != ((BasicInt<T, ObjType>*)B)->Data); }
+
+		inline operator T& () { return Data; }
+
 	public:
 		T Data;
 	};
 
 	// basic integer types.
-	using Int8 = BasicInt<signed char>;
-	using UInt8 = BasicInt<unsigned char>;
-	using Int16 = BasicInt<signed short>;
-	using UInt16 = BasicInt<unsigned short>;
-	using Int32 = BasicInt<signed int>;
-	using UInt32 = BasicInt<signed int>;
-	using Int64 = BasicInt<signed long long>;
-	using UInt64 = BasicInt<unsigned long long>;
+	using Int8 = BasicInt<signed char, ObjectType::Int8>;
+	using UInt8 = BasicInt<unsigned char, ObjectType::UInt8>;
+	using Int16 = BasicInt<signed short, ObjectType::Int16>;
+	using UInt16 = BasicInt<unsigned short, ObjectType::UInt16>;
+	using Int32 = BasicInt<signed int, ObjectType::Int32>;
+	using UInt32 = BasicInt<signed int, ObjectType::UInt32>;
+	using Int64 = BasicInt<signed long long, ObjectType::Int64>;
+	using UInt64 = BasicInt<unsigned long long, ObjectType::UInt64>;
 
 }

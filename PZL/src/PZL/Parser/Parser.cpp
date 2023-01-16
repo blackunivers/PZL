@@ -1,11 +1,11 @@
 #include "PCH.h"
-#include "Parser.h"
+#include "PZL/Parser/Parser.h"
 
-#include "Lexer/Token.h"
-#include "Lexer/Lexer.h"
-#include "Parser/Precedence.h"
-#include "Parser/PrefixParseFns.h"
-#include "Parser/InfixParseFns.h"
+#include "PZL/Lexer/Token.h"
+#include "PZL/Lexer/Lexer.h"
+#include "PZL/Parser/Precedence.h"
+#include "PZL/Parser/PrefixParseFns.h"
+#include "PZL/Parser/InfixParseFns.h"
 
 namespace PZL
 {
@@ -58,7 +58,22 @@ namespace PZL
 	void Parser::DefineVarTypes()
 	{
 		VarTypes.emplace_back(TokenType::TYPE_VOID);
-		VarTypes.emplace_back(TokenType::TYPE_INT);
+
+		VarTypes.emplace_back(TokenType::TYPE_INT8);
+		VarTypes.emplace_back(TokenType::TYPE_UINT8);
+		
+		VarTypes.emplace_back(TokenType::TYPE_INT16);
+		VarTypes.emplace_back(TokenType::TYPE_UINT16);
+		
+		VarTypes.emplace_back(TokenType::TYPE_INT32);
+		VarTypes.emplace_back(TokenType::TYPE_UINT32);
+		
+		VarTypes.emplace_back(TokenType::TYPE_INT64);
+		VarTypes.emplace_back(TokenType::TYPE_UINT64);
+		
+		VarTypes.emplace_back(TokenType::TYPE_FLOAT32);
+		VarTypes.emplace_back(TokenType::TYPE_FLOAT64);
+		
 		VarTypes.emplace_back(TokenType::TYPE_BOOL);
 	}
 
@@ -85,7 +100,7 @@ namespace PZL
 	{
 		auto it = Precedences.find(CurrentToken->Type);
 
-		if ((int)it->second)
+		if (it != Precedences.end())
 		{
 			return it->second;
 		}
@@ -102,10 +117,18 @@ namespace PZL
 			left_expression = ppf(this, Type);
 		else
 		{
-			if (CurrentToken->Type == TokenType::ILLEGAL)
-				std::cout << "Error at Line " << CurrentToken->Line << ": \n\tAn expression was expected";
+			for(auto VarType : VarTypes)
+				if (CurrentToken->Type == TokenType::ILLEGAL || Type == VarType)
+				{
+					std::cout << "Error at Line " << CurrentToken->Line << ":\n\tAn expression was expected";
+					exit(-1);
+				}
+			if(CurrentToken->Type != TokenType::ILLEGAL)
+			{
+				std::cout << "Error at Line " << CurrentToken->Line << ":\n\tA statement was expected.";
+				exit(-1);
+			}
 			
-			exit(-1);
 		}
 
 		InfixParseFn ipf;
@@ -130,7 +153,7 @@ namespace PZL
 
 	AST::ExpressionStatement* Parser::ParseExpressionStatement()
 	{
-		AST::ExpressionStatement* ES = new AST::ExpressionStatement(new Token(CurrentToken->Type, CurrentToken->Value, CurrentToken->Line));
+		AST::ExpressionStatement* ES = new AST::ExpressionStatement(CurrentToken->Line);
 		ES->Value = ParseExpression(Precedence::LOWEST, TokenType::ILLEGAL);
 
 		if (NextToken->Type == TokenType::SEMICOLON)
@@ -144,7 +167,8 @@ namespace PZL
 
 	AST::ReturnStatement* Parser::ParseReturnStatement()
 	{
-		AST::ReturnStatement* RS = new AST::ReturnStatement(CurrentToken);
+		AST::ReturnStatement* RS = new AST::ReturnStatement(CurrentToken->Line);
+		delete CurrentToken;
 
 		Advance();
 
@@ -172,28 +196,60 @@ namespace PZL
 
 	AST::VarStatement* Parser::ParseVarStatement(TokenType VarType)
 	{
-		AST::VarStatement* Var = new AST::VarStatement(CurrentToken, CurrentToken->Type);
+		AST::VarStatement* Var = new AST::VarStatement(CurrentToken->Line, CurrentToken->Type);
+		delete CurrentToken;
 
-		if (!ExpectedToken(TokenType::ID))
-			return nullptr;
+		if (!ExpectedToken(TokenType::ID)) {}
 
-		Var->ID = new AST::Identifier(CurrentToken, CurrentToken->Value);
+		Var->ID = new AST::Identifier(CurrentToken->Line, CurrentToken->Value);
+		delete CurrentToken;
 
 		if(NextToken->Type == TokenType::SEMICOLON)
 		{
-			if (VarType == TokenType::TYPE_INT)
-				Var->Value = new AST::Integer32(NextToken);
-			else if (VarType == TokenType::TYPE_BOOL)
-				Var->Value = new AST::Boolean(NextToken);
-
+			switch (VarType)
+			{
+			case PZL::TokenType::TYPE_INT8:
+				Var->Value = new AST::Integer8(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_UINT8:
+				Var->Value = new AST::UnsignedInteger8(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_INT16:
+				Var->Value = new AST::Integer16(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_UINT16:
+				Var->Value = new AST::UnsignedInteger16(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_INT32:
+				Var->Value = new AST::Integer32(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_UINT32:
+				Var->Value = new AST::UnsignedInteger32(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_INT64:
+				Var->Value = new AST::Integer64(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_UINT64:
+				Var->Value = new AST::UnsignedInteger64(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_FLOAT32:
+				Var->Value = new AST::Float32(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_FLOAT64:
+				Var->Value = new AST::Float64(NextToken->Line);
+				break;
+			case PZL::TokenType::TYPE_BOOL:
+				Var->Value = new AST::Boolean(NextToken->Line);
+				break;
+			}
+			delete NextToken;
 			Advance();
 
 			return Var;
 		}
 
 
-		if (!ExpectedToken(TokenType::EQUALS))
-			return nullptr;
+		if (!ExpectedToken(TokenType::EQUALS)) {}
 		delete CurrentToken;
 
 		Advance();
@@ -248,8 +304,7 @@ namespace PZL
 				args.emplace_back(Expr);
 		}
 
-		if (!ExpectedToken(TokenType::RPAREN))
-			return {};
+		if (!ExpectedToken(TokenType::RPAREN)) {}
 		delete CurrentToken;
 
 		return args;
@@ -277,12 +332,13 @@ namespace PZL
 		Advance();
 
 		TokenType FristArgumentType = CurrentToken->Type;
-		AST::VarStatement* FristArgument = new AST::VarStatement(CurrentToken, CurrentToken->Type);
+		AST::VarStatement* FristArgument = new AST::VarStatement(CurrentToken->Line, CurrentToken->Type);
+		delete CurrentToken;
 
-		if (!ExpectedToken(TokenType::ID))
-			return {};
+		if (!ExpectedToken(TokenType::ID)) {}
 
-		FristArgument->ID = new AST::Identifier(CurrentToken, CurrentToken->Value);
+		FristArgument->ID = new AST::Identifier(CurrentToken->Line, CurrentToken->Value);
+		delete CurrentToken;
 
 		if (NextToken->Type == TokenType::EQUALS)
 		{
@@ -302,12 +358,13 @@ namespace PZL
 			Advance();
 
 			TokenType ArgumentType = CurrentToken->Type;
-			AST::VarStatement* Argument = new AST::VarStatement(CurrentToken, CurrentToken->Type);
+			AST::VarStatement* Argument = new AST::VarStatement(CurrentToken->Line, CurrentToken->Type);
+			delete CurrentToken;
 
-			if (!ExpectedToken(TokenType::ID))
-				return {};
+			if (!ExpectedToken(TokenType::ID)) {}
 
-			Argument->ID = new AST::Identifier(CurrentToken, CurrentToken->Value);
+			Argument->ID = new AST::Identifier(CurrentToken->Line, CurrentToken->Value);
+			delete CurrentToken;
 
 			if (NextToken->Type == TokenType::EQUALS)
 			{
@@ -321,8 +378,7 @@ namespace PZL
 			Params.emplace_back(Argument);
 		}
 
-		if (!ExpectedToken(TokenType::RPAREN))
-			return {};
+		if (!ExpectedToken(TokenType::RPAREN)) {}
 		delete CurrentToken;
 
 		return Params;
@@ -330,7 +386,8 @@ namespace PZL
 
 	AST::Block* Parser::ParseBlock()
 	{
-		AST::Block* Block = new AST::Block(CurrentToken);
+		AST::Block* Block = new AST::Block(CurrentToken->Line);
+		delete CurrentToken;
 
 		Advance();
 		while (CurrentToken->Type != TokenType::RBRACE && CurrentToken->Type != TokenType::END_OF_FILE)

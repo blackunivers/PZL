@@ -1,7 +1,5 @@
 #include "PCH.h"
-#include "IO.h"
-
-#include "System/Error.h"
+#include "PZL/IO/IO.h"
 
 namespace PZL::IO
 {
@@ -11,7 +9,7 @@ namespace PZL::IO
 		std::ifstream IFile(Path, std::ios::in | std::ios::binary);
 
 		if (!IFile.is_open())
-			PZL_EXIT_WITH_ERROR("Could not open the file: %s\n", Path);
+			return new File{ 0, 0, false };
 
 		std::string Content;
 		std::string Line;

@@ -1,5 +1,5 @@
 #include "PCH.h"
-#include "Token.h"
+#include "PZL/Lexer/Token.h"
 
 namespace PZL
 {
@@ -8,6 +8,8 @@ namespace PZL
     {
         switch (Type)
         {
+        case TokenType::NONE:
+            return "None";
         case TokenType::ID:
             return "ID";
 
@@ -56,8 +58,8 @@ namespace PZL
         case TokenType::ELSE:
             return "Else";
 
-        case TokenType::INT:
-            return "Int";
+        case TokenType::INT32:
+            return "Int32";
         case TokenType::FALSE:
             return "False";
         case TokenType::TRUE:
@@ -65,8 +67,26 @@ namespace PZL
 
         case TokenType::TYPE_VOID:
             return "TypeVoid";
-        case TokenType::TYPE_INT:
-            return "TypeInt";
+        case TokenType::TYPE_INT8:
+            return "TypeInt8";
+        case TokenType::TYPE_UINT8:
+            return "TypeUInt8";
+        case TokenType::TYPE_INT16:
+            return "TypeInt16";
+        case TokenType::TYPE_UINT16:
+            return "TypeUInt16";
+        case TokenType::TYPE_INT32:
+            return "TypeInt32";
+        case TokenType::TYPE_UINT32:
+            return "TypeUInt32";
+        case TokenType::TYPE_INT64:
+            return "TypeInt64";
+        case TokenType::TYPE_UINT64:
+            return "TypeUInt64";
+        case TokenType::TYPE_FLOAT32:
+            return "TypeFloat32";
+        case TokenType::TYPE_FLOAT64:
+            return "TypeFloat64";
         case TokenType::TYPE_BOOL:
             return "TypeBool";
 
@@ -85,7 +105,21 @@ namespace PZL
     static int DefineKeyWords()
     {
         Token::KeyWords["void"] = TokenType::TYPE_VOID;
-        Token::KeyWords["int"] = TokenType::TYPE_INT;
+
+        Token::KeyWords["i8"] = TokenType::TYPE_INT8;
+        Token::KeyWords["u8"] = TokenType::TYPE_UINT8;
+    
+        Token::KeyWords["i16"] = TokenType::TYPE_INT16;
+        Token::KeyWords["u16"] = TokenType::TYPE_UINT16;
+    
+        Token::KeyWords["i32"] = TokenType::TYPE_INT32;
+        Token::KeyWords["u32"] = TokenType::TYPE_UINT32;
+
+        Token::KeyWords["i64"] = TokenType::TYPE_INT64;
+        Token::KeyWords["u64"] = TokenType::TYPE_UINT64;       
+        Token::KeyWords["f32"] = TokenType::TYPE_FLOAT32;
+        Token::KeyWords["f64"] = TokenType::TYPE_FLOAT64;
+
         Token::KeyWords["bool"] = TokenType::TYPE_BOOL;
         
         Token::KeyWords["if"] = TokenType::IF;

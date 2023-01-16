@@ -1,355 +1,325 @@
 #include "PCH.h"
-#include "Evaluator.h"
+#include "PZL/Evaluator/Evaluator.h"
 
-#include "Parser/AST/Expression.h"
-#include "Parser/AST/Statement.h"
-#include "Lexer/Token.h"
-#include "Types/Object.h"
-#include "Types/Global.h"
-#include "Evaluator/Environment.h"
+#include "PZL/Parser/AST/Expression.h"
+#include "PZL/Parser/AST/Statement.h"
+#include "PZL/Lexer/Token.h"
+#include "PZL/Types/Global.h"
+#include "PZL/Types/Error.h"
+#include "PZL/Evaluator/Environment.h"
 
-namespace PZL::Evaluator
+namespace PZL
 {
 
-    Object* Evaluate(AST::ASTNode* Node, Environment* Env)
-    {
-        AST::ASTNodeType NodeType = Node->Type();
+	template<typename... TArg>
+	Error* CreateError(ErrorType ErrType, const char* Message, TArg&&... ARGS)
+	{
+		char* Buffer = (char*)calloc(strlen(Message), sizeof(char));
+		sprintf(Buffer, Message, std::forward<TArg>(ARGS)...);
 
-        if (NodeType == AST::ASTNodeType::Program)
-        {
-            AST::Program* Program = (AST::Program*)Node;
+		return new Error(Buffer, ErrType);
+	}
 
-            return EvaluateProgram(Program, Env);
-        }
-        else if (NodeType == AST::ASTNodeType::ExpressionStatement)
-        {
-            AST::ExpressionStatement* ES = (AST::ExpressionStatement*)Node;
-            Line = ES->TK->Line;
-            if (ES->Value != nullptr)
-                return Evaluate(ES->Value, Env);
-        }
-        else if (NodeType == AST::ASTNodeType::Integer32)
-        {
-            AST::Integer32* Int32 = (AST::Integer32*)Node;
-            Line = Int32->TK->Line;
-            return new Type::Int32(Int32->Value);
-        }
-        else if (NodeType == AST::ASTNodeType::Boolean)
-        {
-            AST::Boolean* Bool = (AST::Boolean*)Node;
-            Line = Bool->TK->Line;
-            return new Type::Bool(Bool->Value);
-        }
-        else if (NodeType == AST::ASTNodeType::Prefix)
-        {
-            AST::Prefix* Prefix = (AST::Prefix*)Node;
-            Line = Prefix->TK->Line;
-            Object* Right = Evaluate(Prefix->Right, Env);
+	Evaluator::Evaluator()
+	{
+		GlobalEnvironment = new Environment;
 
-            Object* Result = EvaluatePrefixExpression(Prefix->Operator, Right);
-            if (TypeEvaluation == Context::Var)
-                if (Prefix->Right->Type() != AST::ASTNodeType::Identifier)
-                    delete Right;
-            else if (TypeEvaluation == Context::Expression)
-                delete Right;
+		GlobalEnvironment->StorageVar["VERSION"] = new Var("VERSION", new Type::UInt16(1000), ObjectType::UInt16);
+	}
 
-            TypeEvaluation = Context::Expression;
-            return Result;
-        }
-        else if (NodeType == AST::ASTNodeType::Infix)
-        {
-            AST::Infix* Infix = (AST::Infix*)Node;
-            Line = Infix->TK->Line;
-            Object* Left = Evaluate(Infix->Left, Env);
-            Object* Right = Evaluate(Infix->Right, Env);
+	Evaluator::~Evaluator()
+	{
+		delete GlobalEnvironment;
+	}
 
-            Object* Result =  EvaluateInfixExpression(Infix->Operator, Left, Right);
+	Object* Evaluator::EvaluateProgram(AST::Program* Program)
+	{
+		for (auto Statement : Program->Statements)
+		{
+			CurrentContext[0] = Context::PreEvaluation;
+			auto Result = EvaluateStatement(Statement);
 
-           
-            if(Infix->Left->Type() != AST::ASTNodeType::Identifier)
-                delete Left;
-            if (Infix->Right->Type() != AST::ASTNodeType::Identifier)
-                delete Right;
-            
-            TypeEvaluation = Context::Expression;
-            return Result;
-        }
-        else if (NodeType == AST::ASTNodeType::Block)
-        {
-            AST::Block* Block = (AST::Block*)Node;
-            Line = Block->TK->Line;
-            return EvaluateBlockStatements(Block, Env);
-        }
-        else if (NodeType == AST::ASTNodeType::If)
-        {
-            AST::If* If = (AST::If*)Node;
-            Line = If->TK->Line;
-            return EvaluateIfExpression(If, Env);
-        }
-        else if (NodeType == AST::ASTNodeType::ReturnStatement)
-        {
-            AST::ReturnStatement* RS = (AST::ReturnStatement*)Node;
-            Line = RS->TK->Line;
-            Object* Result = nullptr;
+			if (CurrentContext[1] == Context::ReturnStatement)
+			{
+				delete Result;
+				return new Error(ERROR::StatementExpected.What, ErrorType::StatementExpected);
+			}
+			else if (Result->Type != ObjectType::Error && Result->Type != ObjectType::Null)
+			{
+				delete Result;
+				return new Error(ERROR::StatementExpected.What, ErrorType::StatementExpected);
+			}
 
-            if (RS->Value != nullptr)
-                Result = Evaluate(RS->Value, Env);
+			ShowErrorAndExit(Result);
+		}
 
-            if (Result->Type != ObjectType::Null)
-                return new Type::Return(Result);
-        }
-        else if (NodeType == AST::ASTNodeType::VarStatement)
-        {
-            AST::VarStatement* Var = (AST::VarStatement*)Node;
-            Line = Var->TK->Line;
-            Object* Value = nullptr;
-            auto it = Env->StorageVar.find(Var->ID->ID);
+		CurrentContext = { Context::PreEvaluation, Context::OperationExpression, Context::OperationExpression };
+		return new Type::Null;
+	}
 
-            if (it != Env->StorageVar.end())
-            {
-                TypeEvaluation = Context::Var;
-                return it->second;
-            }
-            else
-            {
-                TypeEvaluation = Context::Var;
-                if (Var->Value != nullptr)
-                    Value = Evaluate(Var->Value, Env);
+	Object* Evaluator::EvaluateStatement(AST::Statement* Statement)
+	{
+		switch (Statement->Type())
+		{
+		case AST::ASTNodeType::ExpressionStatement:
+			{
+				AST::ExpressionStatement* ES = (AST::ExpressionStatement*)Statement;
+				CurrentLine = ES->Line;
+				return EvaluateExpression(ES->Value);
+			}
+		case AST::ASTNodeType::ReturnStatement:
+			{
+				AST::ReturnStatement* RS = (AST::ReturnStatement*)Statement;
+				CurrentLine = RS->Line;
+				CurrentContext[1] = Context::ReturnStatement;
+				if (RS->Value->Type() == AST::ASTNodeType::Identifier)
+					CurrentContext[2] = Context::ReturnStatementID;
+				return EvaluateExpression(RS->Value);
+			}
+		case AST::ASTNodeType::VarStatement:
+			{
+				AST::VarStatement* VS = (AST::VarStatement*)Statement;
+				CurrentLine = VS->Line;
+				CurrentContext[1] = Context::VariableStatement;
 
-                if (Var->ID != nullptr && Value->Type != ObjectType::Null)
-                {
-                    if(Var->VarType == TokenType::TYPE_INT)
-                    {
-                        Object* Int32 = new Type::Int32(((Type::Int32*)Value)->Data);
-                        delete Value;
-                        Env->StorageVar[Var->ID->ID] = Int32;
-                    }
-                    if (Var->VarType == TokenType::TYPE_BOOL)
-                    {
-                        Object* Bool = new Type::Bool(((Type::Bool*)Value)->Data);
-                        delete Value;
-                        Env->StorageVar[Var->ID->ID] = Bool;
-                    }
-                }
-            }
-        }
-        else if (NodeType == AST::ASTNodeType::Identifier)
-        {
-            AST::Identifier* ID = (AST::Identifier*)Node;
-            Line = ID->TK->Line;
-            TypeEvaluation = Context::Var;
-            return EvaluateIdentifier(ID, Env);
-        }
-        else if (NodeType == AST::ASTNodeType::Function)
-        {
-            AST::Function* Function = (AST::Function*)Node;
-            return new Type::Function(Function->Parameters, Function->Body, Env);
-        }
+				auto it = GlobalEnvironment->StorageVar.find(VS->ID->ID);
+				if (it != GlobalEnvironment->StorageVar.end())
+				{
+					std::cout << "Error at line " << CurrentLine << ":\n\t" << "New definition for '" << Object::ObjectTypeToString(Object::TokenTypeToObjectType(VS->VarType)) << ' ' << VS->ID->ID << "'.";
+					exit(-1);
+				}
+				else
+				{
+					GlobalEnvironment->StorageVar[VS->ID->ID] = new Var(VS->ID->ID, nullptr, Object::TokenTypeToObjectType(VS->VarType));
+					Object* Value = EvaluateExpression(VS->Value);
+					if (Value->Type == Object::TokenTypeToObjectType(VS->VarType))
+						GetVarByName(VS->ID->ID)->Value = Value;
+					else
+					{
+						switch (Object::TokenTypeToObjectType(VS->VarType))
+						{
+						case ObjectType::Int8:
+							GetVarByName(VS->ID->ID)->Value = new Type::Int8((char)((Type::Int64*)Value)->Data);
+							break;
+						case ObjectType::UInt8:
+							GetVarByName(VS->ID->ID)->Value = new Type::UInt8((unsigned char)((Type::UInt64*)Value)->Data);
+							break;
+						case ObjectType::Int16:
+							GetVarByName(VS->ID->ID)->Value = new Type::Int16((short)((Type::Int64*)Value)->Data);
+							break;
+						case ObjectType::UInt16:
+							GetVarByName(VS->ID->ID)->Value = new Type::UInt16((unsigned short)((Type::UInt64*)Value)->Data);
+							break;
+						case ObjectType::Int32:
+							GetVarByName(VS->ID->ID)->Value = new Type::Int32((int)((Type::UInt64*)Value)->Data);
+							break;
+						case ObjectType::UInt32:
+							GetVarByName(VS->ID->ID)->Value = new Type::UInt32((unsigned int)((Type::Int64*)Value)->Data);
+							break;
+						case ObjectType::Int64:
+							GetVarByName(VS->ID->ID)->Value = new Type::Int64((long long)((Type::Int64*)Value)->Data);
+							break;
+						case ObjectType::UInt64:
+							GetVarByName(VS->ID->ID)->Value = new Type::UInt64((long long)((Type::UInt64*)Value)->Data);
+							break;
+						case ObjectType::Float32:
+							if (Value->Type == ObjectType::Float32)
+								GetVarByName(VS->ID->ID)->Value = new Type::Float64(((Type::Float32*)Value)->Data);
+							else if (Value->Type == ObjectType::Float64)
+								GetVarByName(VS->ID->ID)->Value = new Type::Float64(((Type::Float64*)Value)->Data);
+							break;
+						case ObjectType::Float64:
+							if (Value->Type == ObjectType::Float32)
+								GetVarByName(VS->ID->ID)->Value = new Type::Float64(((Type::Float32*)Value)->Data);
+							else if (Value->Type == ObjectType::Float64)
+								GetVarByName(VS->ID->ID)->Value = new Type::Float64(((Type::Float64*)Value)->Data);
+							break;
+						case ObjectType::Bool:
+							GetVarByName(VS->ID->ID)->Value = new Type::Bool(((Type::Bool*)Value)->Data);
+							break;
+						}
+						delete Value;
+					}
+					CurrentContext[1] = Context::OperationExpression;
+				}
+			}
+		}
 
-        return new Type::Null();
-    }
+		return new Type::Null;
+	}
 
-    Object* EvaluateProgram(const AST::Program* Program, Environment* Env)
-    {
-        Object* Result = new Type::Null();
+	Object* Evaluator::EvaluateExpression(AST::Expression* Expression)
+	{
+		switch (Expression->Type())
+		{
+		case AST::ASTNodeType::Function:
+		{
+			AST::Function* Func = (AST::Function*)Expression;
+			CurrentLine = Func->Line;
 
-        for (auto Statement : Program->Statements)
-        {
-            Line = Statement->TK->Line;
-            if (TypeEvaluation == Context::Expression)
-                delete Result;
-            else if(TypeEvaluation == Context::Var)
-                if (Result->Type == PZL::ObjectType::Null || Result->Type == PZL::ObjectType::Error)
-                    delete Result;
-            Result = Evaluate(Statement, Env);
+			auto it = GlobalEnvironment->StorageFunctions.find(Func->FunctionName->ID);
+			if (it != GlobalEnvironment->StorageFunctions.end())
+			{
+				if (it->second->IsDefined && Func->IsDefined)
+				{
+					std::cout << "Error at line " << CurrentLine << ":\n\t" << "The '" << Func->FunctionName->ID << "' type '" << Object::ObjectTypeToString(Object::TokenTypeToObjectType(Func->FunctionType)) << "' function is already defined.";
+					exit(-1);
+				}
+				else if (!it->second->IsDefined && Func->IsDefined)
+				{
+					GetFunctionByName(Func->FunctionName->ID)->IsDefined = true;
+					GetFunctionByName(Func->FunctionName->ID)->Body = Func->Body->Statements;
+				}
+			}
+			else
+			{
+				GlobalEnvironment->StorageFunctions[Func->FunctionName->ID] = new Function(Object::TokenTypeToObjectType(Func->FunctionType), Func->IsDefined, Func->FunctionName->ID, std::move(Func->Body->Statements));
+			}
+		}
+		break;
+		case AST::ASTNodeType::Boolean:
+			CurrentLine = ((AST::Boolean*)Expression)->Line;
+			return new Type::Bool(((AST::Boolean*)Expression)->Value);
+		case AST::ASTNodeType::Integer8:
+			CurrentLine = ((AST::Integer8*)Expression)->Line;
+			return new Type::Int8(((AST::Integer8*)Expression)->Value);
+		case AST::ASTNodeType::UnsignedInteger8:
+			CurrentLine = ((AST::UnsignedInteger8*)Expression)->Line;
+			return new Type::UInt8(((AST::UnsignedInteger8*)Expression)->Value);
+		case AST::ASTNodeType::Integer16:
+			CurrentLine = ((AST::Integer16*)Expression)->Line;
+			return new Type::Int16(((AST::Integer16*)Expression)->Value);
+		case AST::ASTNodeType::UnsignedInteger16:
+			CurrentLine = ((AST::UnsignedInteger16*)Expression)->Line;
+			return new Type::UInt16(((AST::UnsignedInteger16*)Expression)->Value);
+		case AST::ASTNodeType::Integer32:
+			CurrentLine = ((AST::Integer32*)Expression)->Line;
+			return new Type::Int32(((AST::Integer32*)Expression)->Value);
+		case AST::ASTNodeType::UnsignedInteger32:
+			CurrentLine = ((AST::UnsignedInteger32*)Expression)->Line;
+			return new Type::UInt32(((AST::UnsignedInteger32*)Expression)->Value);
+		case AST::ASTNodeType::Integer64:
+			CurrentLine = ((AST::Integer64*)Expression)->Line;
+			return new Type::Int64(((AST::Integer64*)Expression)->Value);
+		case AST::ASTNodeType::UnsignedInteger64:
+			CurrentLine = ((AST::UnsignedInteger64*)Expression)->Line;
+			return new Type::UInt64(((AST::UnsignedInteger64*)Expression)->Value);
+		case AST::ASTNodeType::Float32:
+			CurrentLine = ((AST::Float32*)Expression)->Line;
+			return new Type::Float32(((AST::Float32*)Expression)->Value);
+		case AST::ASTNodeType::Float64:
+			CurrentLine = ((AST::Float64*)Expression)->Line;
+			return new Type::Float64(((AST::Float64*)Expression)->Value);
+		case AST::ASTNodeType::Infix:
+			{
+				AST::Infix* Infix = (AST::Infix*)Expression;
+				CurrentLine = Infix->Line;
 
-            if (Result->Type == ObjectType::Return)
-            {
-                Type::Return* Return = (Type::Return*)Result;
-                Object* Value = &(*(Return->Value));
-                Return->Value = NULL;
-                delete Return;
-                return Value;
-            }
-            else if(Result->Type == ObjectType::Error)
-                return Result;
-        }
-        return Result;
-    }
+				Object* Right = EvaluateExpression(Infix->Right);
+				Object* Left = EvaluateExpression(Infix->Left);
 
-    Object* EvaluateBangExpression(Object* Right)
-    {
-        if (Right->Type == ObjectType::Int32)
-            return new Type::Int32((int)(!((Type::Int32*)Right)->Data));
-        else if (((Type::Bool*)Right)->Data == Type::TRUE.Data)
-            return new Type::Bool(false);
-        else if (((Type::Bool*)Right)->Data == Type::FALSE.Data)
-            return new Type::Bool(true);
-        else
-            return new Type::Bool(false);
-    }
-    
-    Object* EvaluateBlockStatements(const AST::Block* Block, Environment* Env)
-    {
-        Object* Result = new Type::Null;
+				Object* Result = EvaluateInfix(Right, Infix->Operator, Left);
 
-        for (auto Statement : Block->Statements)
-        {
-            Line = Statement->TK->Line;
-            if (Result->Type == PZL::ObjectType::Null || Result->Type == PZL::ObjectType::Error)
-                delete Result;
-            Result = Evaluate(Statement, Env);
+				
+				if (Infix->Right->Type() != AST::ASTNodeType::Identifier)
+					delete Right;
+				if (Infix->Left->Type() != AST::ASTNodeType::Identifier)
+					delete Left;
 
-            if (Result->Type == ObjectType::Return)
-            {
-                Type::Return* Return = (Type::Return*)Result;
-                return Return->Value;
-            }
-        }
-        return Result;
-    }
+				return Result;
+			}
+		case AST::ASTNodeType::Identifier:
+			{
+				AST::Identifier* ID = (AST::Identifier*)Expression;
+				CurrentLine = ID->Line;
 
-    Object* EvaluateIfExpression(AST::If* If, Environment* Env)
-    {
-        Object* Condition = Evaluate(If->Condition, Env);
-        if (IsTruThy(Condition))
-        {
-            delete Condition;
-            return Evaluate(If->IfBlock, Env);
-        }
-        else if (If->ElseBlock != nullptr)
-        {
-            delete Condition;
-            return Evaluate(If->ElseBlock, Env);
-        }
-        delete Condition;
-        return new Type::Null;
-    }
+				return EvaluateID(ID->ID);
+			}
+		}
 
-    Object* EvaluateIdentifier(AST::Identifier* ID, Environment* Env)
-    {
-        auto Value = Env->StorageVar.find(ID->ID);
+		return new Type::Null;
+	}
 
-        if (Value != Env->StorageVar.end())
-            return Env->StorageVar[ID->ID];
+	Object* Evaluator::EvaluateInfix(Object* Right, const char* Operator, Object* Left)
+	{
+		if (Object::IsInteger(Right->Type) && Object::IsInteger(Left->Type))
+			return EvaluateIntegerOperation(Right, Operator, Left);
+		if (Object::IsFloat(Right->Type) && Object::IsFloat(Left->Type))
+			return EvaluateFloatOperation(Right, Operator, Left);
 
-        return NewError(CreateErrorMessage(Type::ERROR_UNDEFINED_IDENTIFIER.What, ID->ID));
-    }
+		return new Type::Null;
+	}
 
-    bool IsTruThy(Object* Obj)
-    {
-        if (Obj == NULL)
-            return false;
-        else if (((Type::Bool*)Obj)->Data == Type::TRUE.Data)
-            return true;
-        else if (((Type::Bool*)Obj)->Data == Type::FALSE.Data)
-            return false;
-        else
-            return true;
-    }
+	Object* Evaluator::EvaluateID(const char* ID)
+	{
+		auto it = GlobalEnvironment->StorageVar.find(ID);
+		if (it != GlobalEnvironment->StorageVar.end())
+		{
+			return it->second->Value;
+		}
 
-    Object* EvaluateInfixExpression(const char* Operator, Object* Left, Object* Right)
-    {
-        if (Left->Type == ObjectType::Int32 && Right->Type == ObjectType::Int32)
-            return EvaluateIntegerInfixExpression(Operator, Left, Right);
-        if (Left->Type == ObjectType::Bool && Right->Type == ObjectType::Int32)
-            return EvaluateBooleanInfixExpression(Operator, Left, Right);
-        if (Left->Type == ObjectType::Int32 && Right->Type == ObjectType::Bool)
-            return EvaluateBooleanInfixExpression(Operator, Left, Right);
-        if (Left->Type == ObjectType::Bool && Right->Type == ObjectType::Bool)
-            return EvaluateBooleanInfixExpression(Operator, Left, Right);
-        else if (std::strcmp(Operator, "==") == 0)
-            return new Type::Bool(((Type::Bool*)Left)->Data == ((Type::Bool*)Right)->Data);
-        else if (std::strcmp(Operator, "!=") == 0)
-            return new Type::Bool(((Type::Bool*)Left)->Data != ((Type::Bool*)Right)->Data);
-        else if (Left->Type != Right->Type)
-            return NewError(CreateErrorMessage(Type::ERROR_UNKNOWN_OPERATION.What, Operator, Object::ObjectTypeToString(Left->Type), Operator, Object::ObjectTypeToString(Right->Type)));
-        else
-            return NewError(CreateErrorMessage(Type::ERROR_UNKNOWN_OPERATION.What, Operator, Object::ObjectTypeToString(Left->Type), Operator, Object::ObjectTypeToString(Right->Type)));
-    }
+		return CreateError(ErrorType::UndefinedReference, ERROR::UndefinedReference.What, ID);
+	}
 
-    Object* EvaluateIntegerInfixExpression(const char* Operator, Object* Left, Object* Right)
-    {
-        Type::Int32* ValueLeft = (Type::Int32*)Left;
-        Type::Int32* ValueRight = (Type::Int32*)Right;
+	Object* Evaluator::EvaluateBlock(std::vector<AST::Statement*> Statements)
+	{
+		for (auto Statement : Statements)
+		{
+			auto Value = EvaluateStatement(Statement);
+			ShowErrorAndExit(Value);
 
-        if (std::strcmp(Operator, "+") == 0)
-            return new Type::Int32(ValueLeft->Data + ValueRight->Data);
-        else if (std::strcmp(Operator, "==") == 0)
-            return new Type::Bool(ValueLeft->Data == ValueRight->Data);
-        else if (std::strcmp(Operator, "!=") == 0)
-            return new Type::Bool(ValueLeft->Data != ValueRight->Data);
-        else if (std::strcmp(Operator, "-") == 0)
-            return new Type::Int32(ValueLeft->Data - ValueRight->Data);
-        else if (std::strcmp(Operator, "*") == 0)
-            return new Type::Int32(ValueLeft->Data * ValueRight->Data);
-        else if (std::strcmp(Operator, "/") == 0)
-            return new Type::Int32(ValueLeft->Data / ValueRight->Data);
-        else if (std::strcmp(Operator, "<") == 0)
-            return new Type::Bool(ValueLeft->Data < ValueRight->Data);
-        else if(std::strcmp(Operator, ">") == 0)
-            return new Type::Bool(ValueLeft->Data > ValueRight->Data);
-        else
-            return NewError(CreateErrorMessage(Type::ERROR_UNKNOWN_OPERATION.What, Operator, Object::ObjectTypeToString(Left->Type), Operator, Object::ObjectTypeToString(Right->Type)));
-    }
+			if (CurrentContext[1] == Context::ReturnStatement && CurrentContext[0] == Context::FunctionExpression)
+				return Value;
+			else if (CurrentContext[1] == Context::ReturnStatement)
+				return CreateError(ErrorType::StatementExpected, ERROR::UndefinedReference.What);
+		}
 
-    Object* EvaluateBooleanInfixExpression(const char* Operator, Object* Left, Object* Right)
-    {
-        Type::Bool* ValueLeft = (Type::Bool*)Left;
-        Type::Bool* ValueRight = (Type::Bool*)Right;
+		return new Type::Null;
+	}
 
-        if (std::strcmp(Operator, "+") == 0)
-            return new Type::Int32(ValueLeft->Data + ValueRight->Data);
-        else if (std::strcmp(Operator, "-") == 0)
-            return new Type::Int32(ValueLeft->Data - ValueRight->Data);
-        else if (std::strcmp(Operator, "*") == 0)
-            return new Type::Int32(ValueLeft->Data * ValueRight->Data);
-        else if (std::strcmp(Operator, "==") == 0)
-            return new Type::Bool(ValueLeft->Data == ValueRight->Data);
-        else if (std::strcmp(Operator, "!=") == 0)
-            return new Type::Bool(ValueLeft->Data != ValueRight->Data); 
-        else
-            return NewError(CreateErrorMessage(Type::ERROR_UNKNOWN_OPERATOR.What, Operator, Object::ObjectTypeToString(Right->Type)));
-    }
+	Object* Evaluator::ExecuteFunction(const char* FunctionName)
+	{
+		auto it = GlobalEnvironment->StorageFunctions.find(FunctionName);
 
-    Object* EvaluateMinusOperatorExpression(Object* Right)
-    {
-        if (Right->Type == ObjectType::Int32)
-        {
-            Type::Int32* Int32 = (Type::Int32*)Right;
-            return new Type::Int32(-Int32->Data);
-        }
-        else if (Right->Type == ObjectType::Bool)
-        {
-            Type::Bool* Bool = (Type::Bool*)Right;
-            return new Type::Bool(Bool->Data ? false : true);
-        }
-        return NewError(CreateErrorMessage(Type::ERROR_UNKNOWN_OPERATOR.What, "-", Object::ObjectTypeToString(Right->Type)));
-    }
+		if (it != GlobalEnvironment->StorageFunctions.end())
+		{
+			CurrentContext[0] = Context::FunctionExpression;
+			Object* ReturnValue = EvaluateBlock(GetFunctionByName(FunctionName)->Body);
+			if (ReturnValue->Type == GetFunctionByName(FunctionName)->ReturnType)
+				return ReturnValue;
+			else
+				if (Object::IsNumber(ReturnValue->Type) && Object::IsNumber(GetFunctionByName(FunctionName)->ReturnType))
+					return ReturnValue;
+				else
+					return CreateError(ErrorType::ErrorType, ERROR::ErrorType.What, Object::ObjectTypeToString(ReturnValue->Type), Object::ObjectTypeToString(GetFunctionByName(FunctionName)->ReturnType));
+		}
 
-    Object* EvaluatePrefixExpression(const char* Operator, Object* Right)
-    {
-        if (std::strcmp("!", Operator) == 0)
-            return EvaluateBangExpression(Right);
-        else if (std::strcmp("-", Operator) == 0)
-            return EvaluateMinusOperatorExpression(Right);
-        return NewError(CreateErrorMessage(Type::ERROR_UNKNOWN_OPERATOR.What, Operator, Object::ObjectTypeToString(Right->Type)));
-    }
+		return CreateError(ErrorType::UndefinedReference,ERROR::UndefinedReference.What, FunctionName);
+	}
 
-    template<typename... TArgs>
-    const char* CreateErrorMessage(const char* Message, TArgs&&... Args)
-    {
-        const char* Used = "Error at line %i: ";
-        char* Buffer = (char*)calloc(strlen(Used), sizeof(char));
-        sprintf(Buffer, Used, Line);
-        Buffer = (char*)realloc(Buffer, (strlen(Buffer) + strlen(Message)) * sizeof(char));
-        sprintf(Buffer, Message, Buffer, std::forward<TArgs>(Args)...);
-        return Buffer;
-    }
+	void Evaluator::ShowErrorAndExit(Object* E)
+	{
+		if (E->Type == ObjectType::Error && ((Error*)E)->ErrType != ErrorType::SUCCESS)
+		{
+			std::cout << "Error at line " << CurrentLine << ":\n\t" << ((Error*)E)->What;
+			exit(-1);
+		}
 
-    Type::Error* NewError(const char* Message)
-    {
-        return new Type::Error(Message);
-    }
+		if (E->Type == ObjectType::Null)
+		{
+			delete E;
+			E = NULL;
+		}
+	}
+
+	Var* Evaluator::GetVarByName(const char* ID)
+	{
+		return GlobalEnvironment->StorageVar[ID];
+	}
+
+	Function* Evaluator::GetFunctionByName(const char* ID)
+	{
+		return GlobalEnvironment->StorageFunctions[ID];
+	}
 
 }

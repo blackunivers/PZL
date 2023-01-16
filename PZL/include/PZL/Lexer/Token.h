@@ -1,14 +1,14 @@
 #pragma once
 
 #include "PCH.h"
-#include "Types/Base.h"
-
+#include "PZL/Types/Base.h"
 
 namespace PZL
 {
 
 	enum class TokenType
 	{
+		NONE,
 		ID,
 
 		// Symbols
@@ -38,14 +38,24 @@ namespace PZL
 		ELIF,
 		ELSE,
 
-		//Values
-		INT,
+		// Values
+		INT32,
+		FLOAT32,
 		TRUE,
 		FALSE,
 
 		//Primitive types
 		TYPE_VOID,
-		TYPE_INT,
+		TYPE_INT8,
+		TYPE_UINT8,
+		TYPE_INT16,
+		TYPE_UINT16,
+		TYPE_INT32,
+		TYPE_UINT32,
+		TYPE_INT64,
+		TYPE_UINT64,
+		TYPE_FLOAT32,
+		TYPE_FLOAT64,
 		TYPE_BOOL,
 
 		//KeyWords
@@ -63,9 +73,9 @@ namespace PZL
 	public:
 		TokenType Type;
 		char* Value;
-		int Line;
+		Type::Size Line;
 	public:
-		Token(TokenType Type, char Value, int Line)
+		Token(TokenType Type, char Value, Type::Size Line)
 		{
 			this->Type = Type;
 			this->Value = (char*)calloc(2, sizeof(char));
@@ -74,7 +84,7 @@ namespace PZL
 			this->Line = Line;
 		}
 
-		Token(TokenType Type, const char* Value, int Line)
+		Token(TokenType Type, const char* Value, Type::Size Line)
 		{
 			this->Type = Type;
 			this->Value = (char*)Value;

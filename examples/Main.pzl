@@ -1,4 +1,9 @@
-func Main(int x) : int
+
+func Main() : i8
 {
-	return 0;
+	u8 a = 10;
+	u8 b = 10;
+	u8 c = a / b;
+
+	return c;
 }

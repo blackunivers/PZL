@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types/Base.h"
+#include "PZL/Types/Base.h"
 
 namespace PZL
 {
@@ -26,12 +26,13 @@ namespace PZL
 		Token* AdvanceWithTwo(TokenType Type);
 		Token* AdvanceWithID();
 		Token* AdvanceWithDigit();
+		Token* AdvanceWithFloat(const char* Left);
 
 	public:
 		const char* Source;
 		size_t Len;
 		size_t Index;
-		int Line = 1;
+		Type::Size Line = 1;
 		char Current;
 	};
 }

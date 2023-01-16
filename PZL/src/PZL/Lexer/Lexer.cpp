@@ -1,7 +1,7 @@
 #include "PCH.h"
-#include "Lexer.h"
+#include "PZL/Lexer/Lexer.h"
 
-#include "Lexer/Token.h"
+#include "PZL/Lexer/Token.h"
 
 namespace PZL
 {
@@ -187,8 +187,36 @@ namespace PZL
 
             free(Tmp);
         }
+        if (Current == '.')
+        {
+            Value = (char*)realloc(Value, (strlen(Value)+2)*sizeof(char));
+            strcat(Value, ".");
+            return AdvanceWithFloat(Value);
+        }
 
-        return new Token(TokenType::INT, Value, Line);
+        return new Token(TokenType::INT32, Value, Line);
+    }
+
+    Token* Lexer::AdvanceWithFloat(const char* Left)
+    {
+        char* Value = (char*)calloc(strlen(Left) + 1, sizeof(char));
+        strcpy(Value, Left);
+        Advance();
+
+        while (std::isdigit(Current))
+        {
+            Value = (char*)realloc(Value, (strlen(Value) + 2) * sizeof(char));
+            char* Tmp = (char*)calloc(2, sizeof(char));
+            Tmp[0] = Current;
+            Tmp[1] = '\0';
+            strcat(Value, Tmp);
+
+            Advance();
+
+            free(Tmp);
+        }
+
+        return new Token(TokenType::FLOAT32, Value, Line);
     }
 
 }

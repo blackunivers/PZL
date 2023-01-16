@@ -1,13 +1,18 @@
 #pragma once
 
-#include "Types/Object.h"
+#include "PZL/Types/Object.h"
+#include "PZL/Evaluator/Function/Function.h"
+#include "PZL/Evaluator/Var/Var.h"
 
-namespace PZL::Evaluator
+#include <string>
+#include <vector>
+#include <unordered_map>
+
+namespace PZL
 {
 
 	struct Environment
 	{
-	public:
 		Environment()
 		{
 
@@ -21,8 +26,7 @@ namespace PZL::Evaluator
 				delete Func;
 		}
 
-	public:
-		std::unordered_map<std::string, Object*> StorageVar;
-		std::unordered_map<const char*, Object*> StorageFunctions;
+		std::unordered_map<std::string, Var*> StorageVar;
+		std::unordered_map<std::string, Function*> StorageFunctions;
 	};
 }

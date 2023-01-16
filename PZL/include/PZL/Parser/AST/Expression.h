@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Parser/AST/AST.h"
-#include "Types/Bool.h"
-#include "Types/Int.h"
-#include "Lexer/Token.h"
+#include "PZL/Parser/AST/AST.h"
+#include "PZL/Types/Bool.h"
+#include "PZL/Types/Int.h"
+#include "PZL/Lexer/Token.h"
 
 namespace PZL::AST
 {
@@ -13,35 +13,43 @@ namespace PZL::AST
 	struct Identifier : public Expression
 	{
 	public:
-		Identifier(Token* TK, const char* ID);
+		Identifier(Type::Size Line, const char* ID);
 		~Identifier();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		const char* ID;
 	};
 
-	struct Integer32 : public Expression
+	template<typename TypeNumber, ASTNodeType NodeType>
+	struct BasicNumberExpression : public Expression
 	{
 	public:
-		Integer32(Token* TK, Type::Int32 Value = 0);
-		~Integer32();
+		BasicNumberExpression(Type::Size Line, TypeNumber Value = 0) : Expression(Line) { this->Value = Value; }
+		~BasicNumberExpression() {}
 
-		virtual const char* ToString() const override;
-
-		virtual const ASTNodeType Type() const override;
+		inline virtual const ASTNodeType Type() const override { return NodeType; };
 	public:
-		Type::Int32 Value;
+		TypeNumber Value;
 	};
+
+	using Integer8 = BasicNumberExpression<Type::Int8, ASTNodeType::Integer8>;
+	using UnsignedInteger8 = BasicNumberExpression<Type::UInt8, ASTNodeType::UnsignedInteger8>;
+	using Integer16 = BasicNumberExpression<Type::Int16, ASTNodeType::Integer16>;
+	using UnsignedInteger16 = BasicNumberExpression<Type::UInt16, ASTNodeType::UnsignedInteger16>;
+	using Integer32 = BasicNumberExpression<Type::Int32, ASTNodeType::Integer32>;
+	using UnsignedInteger32 = BasicNumberExpression<Type::UInt32, ASTNodeType::UnsignedInteger32>;
+	using Integer64 = BasicNumberExpression<Type::Int64, ASTNodeType::Integer64>;
+	using UnsignedInteger64 = BasicNumberExpression<Type::UInt64, ASTNodeType::UnsignedInteger64>;
+
+	using Float32 = BasicNumberExpression<Type::Float32, ASTNodeType::Float32>;
+	using Float64 = BasicNumberExpression<Type::Float64, ASTNodeType::Float64>;
 
 	struct Boolean : public Expression
 	{
 	public:
-		Boolean(Token* TK, Type::Bool value = false);
+		Boolean(Type::Size Line, Type::Bool value = false);
 		~Boolean();
-
-		virtual const char* ToString() const override;
 
 		virtual const ASTNodeType Type() const override;
 	public:
@@ -51,10 +59,9 @@ namespace PZL::AST
 	struct Prefix : public Expression
 	{
 	public:
-		Prefix(Token* TK, const char* Operator, Expression* Right = nullptr);
+		Prefix(Type::Size Line, const char* Operator, Expression* Right = nullptr);
 		~Prefix();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		const char* Operator;
@@ -64,10 +71,9 @@ namespace PZL::AST
 	struct Infix : public Expression
 	{
 	public:
-		Infix(Token* TK, Expression* Left, const char* Operator, Expression* Right = nullptr);
+		Infix(Type::Size Line, Expression* Left, const char* Operator, Expression* Right = nullptr);
 		~Infix();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		const char* Operator;
@@ -78,13 +84,12 @@ namespace PZL::AST
 	struct Function : public Expression
 	{
 	public:
-		Function(Token* TK, Token* FunctionType = nullptr, Identifier* FunctionName = nullptr, std::vector<VarStatement*> Parameters = {}, Block* Body = nullptr);
+		Function(Type::Size Line, TokenType FunctionType = TokenType::NONE, Identifier* FunctionName = nullptr, std::vector<VarStatement*> Parameters = {}, Block* Body = nullptr);
 		~Function();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
-		Token* FunctionType;
+		TokenType FunctionType;
 		Identifier* FunctionName;
 		std::vector<VarStatement*> Parameters;
 		Block* Body;
@@ -94,10 +99,9 @@ namespace PZL::AST
 	struct Call : public Expression
 	{
 	public:
-		Call(Token* TK, Expression* Fn, std::vector<Expression*> Arguments = {});
+		Call(Type::Size Line, Expression* Fn, std::vector<Expression*> Arguments = {});
 		~Call();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		Expression* Fn;
@@ -107,10 +111,9 @@ namespace PZL::AST
 	struct If : public Expression
 	{
 	public:
-		If(Token* TK, Expression* Condition = nullptr, Block* IfBlock = nullptr, Block* ElseBlock = nullptr);
+		If(Type::Size Line, Expression* Condition = nullptr, Block* IfBlock = nullptr, Block* ElseBlock = nullptr);
 		~If();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		Expression* Condition;

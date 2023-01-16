@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Types/Size.h"
-#include "Types/Bool.h"
+#include "PZL/Types/Size.h"
+#include "PZL/Types/Bool.h"
 
 namespace PZL::IO
 {
@@ -11,7 +11,7 @@ namespace PZL::IO
 	{
 		char* Data;
 		const Type::Size Len;
-		const Type::Bool IsValid;
+		Type::Bool IsValid;
 	};
 	
 	// Gets the contents of a file and returns a file pointer.

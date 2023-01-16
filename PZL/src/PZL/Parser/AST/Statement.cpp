@@ -1,14 +1,13 @@
 #include "PCH.h"
-#include "Statement.h"
+#include "PZL/Parser/AST/Statement.h"
 
-#include "Lexer/Token.h"
-#include "Parser/AST/Expression.h"
-#include "System/Error.h"
+#include "PZL/Lexer/Token.h"
+#include "PZL/Parser/AST/Expression.h"
 
 namespace PZL::AST
 {
 
-	VarStatement::VarStatement(Token* TK, TokenType Type, Identifier* ID, Expression* Value) : Statement(TK)
+	VarStatement::VarStatement(Type::Size Line, TokenType Type, Identifier* ID, Expression* Value) : Statement(Line)
 	{
 		this->VarType = Type;
 		this->ID = ID;
@@ -21,28 +20,12 @@ namespace PZL::AST
 		delete Value;
 	}
 
-	const char* VarStatement::ToString() const
-	{
-		std::stringstream ss;
-		ss << TK->Value << " " << ID->ID;
-		if (Value != nullptr)
-			ss << " = " << Value->ToString() << ';';
-		else
-			ss << " 'funcion argument'";
-
-		std::string Str = ss.str();
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
-	}
-
 	const ASTNodeType VarStatement::Type() const
 	{
 		return ASTNodeType::VarStatement;
 	}
 
-	ExpressionStatement::ExpressionStatement(Token* TK, Expression* Value) : Statement(TK)
+	ExpressionStatement::ExpressionStatement(Type::Size Line, Expression* Value) : Statement(Line)
 	{
 		this->Value = Value;
 	}
@@ -52,20 +35,12 @@ namespace PZL::AST
 		delete Value;
 	}
 
-	const char* ExpressionStatement::ToString() const
-	{
-		if (Value)
-			return Value->ToString();
-		else
-			return "Undefined value for ExpressionStatement";
-	}
-
 	const ASTNodeType ExpressionStatement::Type() const
 	{
 		return ASTNodeType::ExpressionStatement;
 	}
 
-	Block::Block(Token* TK, std::vector<Statement*> Statements) : Statement(TK)
+	Block::Block(Type::Size Line, std::vector<Statement*> Statements) : Statement(Line)
 	{
 		this->Statements = Statements;
 	}
@@ -76,44 +51,12 @@ namespace PZL::AST
 			delete statement;
 	}
 
-	inline const char* Block::ToString() const
-	{
-		std::vector<const char*> out;
-		out.emplace_back("\n{");
-		for (auto statement : Statements)
-		{
-			if (statement != nullptr)
-			{
-				std::string Str = "\t";
-				Str.append(statement->ToString());
-
-				char* NStr = (char*)calloc(Str.length(), sizeof(char));
-				strcpy(NStr, Str.c_str());
-
-				out.emplace_back(NStr);
-			}
-		}
-		out.emplace_back("}");
-
-		std::stringstream ss;
-		for (auto str : out)
-		{
-			ss << str << '\n';
-		}
-
-		std::string Str = ss.str();
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
-	}
-
 	const ASTNodeType Block::Type() const
 	{
 		return ASTNodeType::Block;
 	}
 
-	ReturnStatement::ReturnStatement(Token* TK, Expression* Value) : Statement(TK)
+	ReturnStatement::ReturnStatement(Type::Size Line, Expression* Value) : Statement(Line)
 	{
 		this->Value = Value;
 	}
@@ -121,18 +64,6 @@ namespace PZL::AST
 	ReturnStatement::~ReturnStatement()
 	{
 		delete Value;
-	}
-
-	const char* ReturnStatement::ToString() const
-	{
-		std::stringstream ss;
-		ss << TK->Value << " " << Value->ToString() << ";";
-		std::string Str = ss.str();
-
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
 	}
 
 	const ASTNodeType ReturnStatement::Type() const

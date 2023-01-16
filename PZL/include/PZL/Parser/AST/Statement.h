@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Parser/AST/AST.h"
+#include "PZL/Parser/AST/AST.h"
 
 namespace PZL
 {
@@ -17,10 +17,9 @@ namespace PZL::AST
 	struct VarStatement : public Statement
 	{
 	public:
-		VarStatement(Token* TK, TokenType Type, Identifier* ID = nullptr, Expression* Value = nullptr);
+		VarStatement(Type::Size Line, TokenType Type, Identifier* ID = nullptr, Expression* Value = nullptr);
 		~VarStatement();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		TokenType VarType;
@@ -31,10 +30,9 @@ namespace PZL::AST
 	struct ExpressionStatement : public Statement
 	{
 	public:
-		ExpressionStatement(Token* TK, Expression* Value = nullptr);
+		ExpressionStatement(Type::Size Line, Expression* Value = nullptr);
 		~ExpressionStatement();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		Expression* Value;
@@ -43,10 +41,9 @@ namespace PZL::AST
 	struct Block : public Statement
 	{
 	public:
-		Block(Token* TK, std::vector<Statement*> Statements = {});
+		Block(Type::Size Line, std::vector<Statement*> Statements = {});
 		~Block();
 
-		virtual inline const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		std::vector<Statement*> Statements;
@@ -55,10 +52,9 @@ namespace PZL::AST
 	struct ReturnStatement : public Statement
 	{
 	public:
-		ReturnStatement(Token* TK, Expression* Value = nullptr);
+		ReturnStatement(Type::Size Line, Expression* Value = nullptr);
 		~ReturnStatement();
 
-		virtual const char* ToString() const override;
 		virtual const ASTNodeType Type() const override;
 	public:
 		Expression* Value;

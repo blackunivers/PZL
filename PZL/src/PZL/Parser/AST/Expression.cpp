@@ -1,13 +1,13 @@
 #include "PCH.h"
-#include "Expression.h"
+#include "PZL/Parser/AST/Expression.h"
 
-#include "Lexer/Token.h"
-#include "Parser/AST/Statement.h"
+#include "PZL/Lexer/Token.h"
+#include "PZL/Parser/AST/Statement.h"
 
 namespace PZL::AST
 {
 
-	Identifier::Identifier(Token* TK, const char* ID) : Expression(TK)
+	Identifier::Identifier(Type::Size Line, const char* ID) : Expression(Line)
 	{
 		this->ID = ID;
 	}
@@ -16,40 +16,12 @@ namespace PZL::AST
 	{
 	}
 
-	const char* Identifier::ToString() const
-	{
-		return ID;
-	}
-
 	const ASTNodeType Identifier::Type() const
 	{
 		return ASTNodeType::Identifier;
 	}
 
-	Integer32::Integer32(Token* TK, Type::Int32 Value) : Expression(TK)
-	{
-		this->Value = Value;
-	}
-
-	Integer32::~Integer32()
-	{
-	}
-
-	const char* Integer32::ToString() const
-	{
-		std::string Str = std::to_string(Value.Data);
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
-	}
-
-	const ASTNodeType Integer32::Type() const
-	{
-		return ASTNodeType::Integer32;
-	}
-
-	Boolean::Boolean(Token* TK, Type::Bool value) : Expression(TK)
+	Boolean::Boolean(Type::Size Line, Type::Bool value) : Expression(Line)
 	{
 		this->Value = Value;
 	}
@@ -58,17 +30,12 @@ namespace PZL::AST
 	{
 	}
 
-	const char* Boolean::ToString() const
-	{
-		return Value.ToString();
-	}
-
 	const ASTNodeType Boolean::Type() const
 	{
 		return ASTNodeType::Boolean;
 	}
 
-	Prefix::Prefix(Token* TK, const char* Operator, Expression* Right) : Expression(TK)
+	Prefix::Prefix(Type::Size Line, const char* Operator, Expression* Right) : Expression(Line)
 	{
 		this->Operator = Operator;
 		this->Right = Right;
@@ -79,24 +46,12 @@ namespace PZL::AST
 		delete Right;
 	}
 
-	const char* Prefix::ToString() const
-	{
-		std::stringstream ss;
-		ss << "(" << Operator << Right->ToString() << ")";
-		std::string Str = ss.str();
-
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
-	}
-
 	const ASTNodeType Prefix::Type() const
 	{
 		return ASTNodeType::Prefix;
 	}
 
-	Infix::Infix(Token* TK, Expression* Left, const char* Operator, Expression* Right) : Expression(TK)
+	Infix::Infix(Type::Size Line, Expression* Left, const char* Operator, Expression* Right) : Expression(Line)
 	{
 		this->Left = Left;
 		this->Operator = Operator;
@@ -109,24 +64,12 @@ namespace PZL::AST
 		delete Right;
 	}
 
-	const char* Infix::ToString() const
-	{
-		std::stringstream ss;
-		ss << "(" << Left->ToString() << " " << Operator << " " << Right->ToString() << ")";
-		std::string Str = ss.str();
-
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
-	}
-
 	const ASTNodeType Infix::Type() const
 	{
 		return ASTNodeType::Infix;
 	}
 
-	Function::Function(Token* TK, Token* FunctionType, Identifier* FunctionName, std::vector<VarStatement*> Parameters, Block* Body) : Expression(TK)
+	Function::Function(Type::Size Line, TokenType FunctionType, Identifier* FunctionName, std::vector<VarStatement*> Parameters, Block* Body) : Expression(Line)
 	{
 		this->FunctionType = FunctionType;
 		this->FunctionName = FunctionName;
@@ -136,7 +79,6 @@ namespace PZL::AST
 
 	Function::~Function()
 	{
-		delete FunctionType;
 		delete FunctionName;
 
 		for (auto Param : Parameters)
@@ -145,47 +87,12 @@ namespace PZL::AST
 		delete Body;
 	}
 
-	const char* Function::ToString() const
-	{
-		char* Params = (char*)calloc(2, sizeof(char));
-		if (Parameters.size() == 1)
-			strcat(Params, Parameters[0]->ToString());
-		else
-		{
-			for (auto Param : Parameters)
-			{
-				static Type::Size Index = 1;
-				std::string Tmp = Param->ToString();
-				Params = (char*)realloc(Params, (Tmp.length() + strlen(Params) + 3) * sizeof(char));
-				strcat(Params, Tmp.c_str());
-				if(Index < Parameters.size())
-					strcat(Params, ", ");
-				Index++;
-			}
-		}
-
-		std::stringstream ss;
-		ss << TK->Value << ' ' << FunctionName->ID << "(" << Params << ")" << " : " << FunctionType->Value;
-		if (Body != nullptr)
-			ss << Body->ToString();
-		else
-			ss << ';';
-
-		std::string Str = ss.str();
-
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		free(Params);
-		return NStr;
-	}
-
 	const ASTNodeType Function::Type() const
 	{
 		return ASTNodeType::Function;
 	}
 
-	Call::Call(Token* TK, Expression* Fn, std::vector<Expression*> Arguments) : Expression(TK)
+	Call::Call(Type::Size Line, Expression* Fn, std::vector<Expression*> Arguments) : Expression(Line)
 	{
 		this->Fn = Fn;
 		this->Arguments = Arguments;
@@ -198,37 +105,12 @@ namespace PZL::AST
 			delete Arg;
 	}
 
-	const char* Call::ToString() const
-	{
-		char* Args = (char*)calloc(2, sizeof(char));
-		for (auto Arg : Arguments)
-		{
-			static Type::Size Index = 1;
-			std::string Tmp = Arg->ToString();
-			Args = (char*)realloc(Args, (Tmp.length() + strlen(Args) + 3) * sizeof(char));
-			strcat(Args, Tmp.c_str());
-			if (Index < Arguments.size())
-				strcat(Args, ", ");
-			Index++;
-		}
-
-		std::stringstream ss;
-		ss << Fn->ToString() << "(" << Args << ")";
-		std::string Str = ss.str();
-
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-		
-		free(Args);
-		return NStr;
-	}
-
 	const ASTNodeType Call::Type() const
 	{
 		return ASTNodeType::Call;
 	}
 
-	If::If(Token* TK, Expression* Condition, Block* IfBlock, Block* ElseBlock) : Expression(TK)
+	If::If(Type::Size Line, Expression* Condition, Block* IfBlock, Block* ElseBlock) : Expression(Line)
 	{
 		this->Condition = Condition;
 		this->IfBlock = IfBlock;
@@ -240,21 +122,6 @@ namespace PZL::AST
 		delete Condition;
 		delete IfBlock;
 		delete ElseBlock;
-	}
-
-	const char* If::ToString() const
-	{
-		std::stringstream ss;
-		ss << "if " << Condition->ToString() << " " << IfBlock->ToString();
-
-		if (ElseBlock != nullptr)
-			ss << "\telse" << ElseBlock->ToString();
-
-		std::string Str = ss.str();
-		char* NStr = (char*)calloc(Str.length(), sizeof(char));
-		strcpy(NStr, Str.c_str());
-
-		return NStr;
 	}
 
 	const ASTNodeType If::Type() const

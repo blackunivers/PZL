@@ -1,61 +1,67 @@
 #pragma once
 
-#include "Parser/AST/AST.h"
-#include "Types/Object.h"
+#include "PZL/Parser/AST/Expression.h"
+#include "PZL/Types/Object.h"
+#include "PZL/Types/Error.h"
 
-namespace PZL::AST
+namespace PZL
 {
 
-    struct If;
-    struct Block;
-    struct Identifier;
+	struct Environment;
+	struct Error;
+	class Function;
+	class Var;
 }
 
-namespace PZL::Type
+namespace PZL
 {
 
-    struct Error;
-}
+	class Evaluator
+	{
+	public:
+		Evaluator();
+		~Evaluator();
 
-namespace PZL::Evaluator
-{
+	public:
+		Object* EvaluateProgram(AST::Program* Program);
+		Object* EvaluateStatement(AST::Statement* Statement);
+		Object* EvaluateExpression(AST::Expression* Expression);
 
-    enum class Context
-    {
-        Expression = 1,
-        Var,
-    };
+		Object* EvaluateIntegerOperation(Object* Right, const char* Operator, Object* Left);
+		Object* EvaluateFloatOperation(Object* Right, const char* Operator, Object* Left);
 
-    inline int Line;
-    inline Context TypeEvaluation = Context::Expression;
+		Object* EvaluateInfix(Object* Right, const char* Operator, Object* Left);
+		Object* EvaluateID(const char* ID);
+		Object* EvaluateBlock(std::vector<AST::Statement*> Statements);
 
-    struct Environment;
+		Object* ExecuteFunction(const char* FunctionName);
 
-    Object* Evaluate(AST::ASTNode* Node, Environment* Env);
+		void ShowErrorAndExit(Object* E);
 
-    Object* EvaluateProgram(const AST::Program* Program, Environment* Env);
+		Var* GetVarByName(const char* ID);
+		Function* GetFunctionByName(const char* ID);
 
-    Object* EvaluateBangExpression(Object* Right);
+	public:
+		Type::Size CurrentLine;
 
-    Object* EvaluateBlockStatements(const AST::Block* Block, Environment* Env);
+		enum class Context
+		{
+			PreEvaluation = 0,
+			FunctionExpression,
 
-    Object* EvaluateIfExpression(AST::If* If, Environment* Env);
+			AssingExpression,
+			OperationExpression,
+			CallExpression,
+			IfExpression,
 
-    Object* EvaluateIdentifier(AST::Identifier* ID, Environment* Env);
+			VariableStatement,
+			ReturnStatement,
 
-    bool IsTruThy(Object* Obj);
-
-    Object* EvaluateInfixExpression(const char* Operator, Object* Left, Object* Right);
-    Object* EvaluateIntegerInfixExpression(const char* Operator, Object* Left, Object* Right);
-    Object* EvaluateBooleanInfixExpression(const char* Operator, Object* Left, Object* Right);
-
-    Object* EvaluateMinusOperatorExpression(Object* Right);
-
-    Object* EvaluatePrefixExpression(const char* Operator, Object* Right);
-
-    template<typename... TArgs>
-    const char* CreateErrorMessage(const char* Message, TArgs&&... Args);
-
-    Type::Error* NewError(const char* Message);
+			ReturnStatementID,
+		};
+	   
+		Type::StaticArray< Context, 3> CurrentContext = { Context::PreEvaluation, Context::OperationExpression};
+		Environment* GlobalEnvironment;
+	};
 
 }

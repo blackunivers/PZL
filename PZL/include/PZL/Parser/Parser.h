@@ -6,7 +6,6 @@ namespace PZL::AST
 	struct Expression;
 	struct Statement;
 
-	struct Integer;
 	struct Boolean;
 	struct Prefix;
 	struct Infix;
@@ -78,15 +77,17 @@ namespace PZL
 
 		std::vector<TokenType> VarTypes;
 		std::unordered_map<TokenType, Precedence> Precedences;
+	public:
+		static AST::Expression* ParseInteger(Parser* This, TokenType Type);
+		static AST::Expression* ParseFloat(Parser* This, TokenType Type);
+		static AST::Expression* ParseBoolean(Parser* This, TokenType Type);
+		static AST::Expression* ParseGroupedExpression(Parser* This, TokenType);
+		static AST::Expression* ParseIdentifier(Parser* This, TokenType);
+		static AST::Prefix* ParsePrefixExpression(Parser* This, TokenType);
+		static AST::Expression* ParseFunction(Parser* This, TokenType);
+		static AST::Expression* ParseIf(Parser* This, TokenType);
+		static AST::Infix* ParseInfixExpression(Parser* This, AST::Expression* Left);
+		static AST::Expression* ParseCall(Parser* This, AST::Expression* Fn);
 	};
 
-	AST::Expression* ParseInteger(Parser* This, TokenType Type);
-	AST::Expression* ParseBoolean(Parser* This, TokenType Type);
-	AST::Expression* ParseGroupedExpression(Parser* This, TokenType);
-	AST::Expression* ParseIdentifier(Parser* This, TokenType);
-	AST::Prefix* ParsePrefixExpression(Parser* This, TokenType);
-	AST::Expression* ParseFunction(Parser* This, TokenType);
-	AST::Expression* ParseIf(Parser* This, TokenType);
-	AST::Infix* ParseInfixExpression(Parser* This, AST::Expression* Left);
-	AST::Expression* ParseCall(Parser* This, AST::Expression* Fn);
 }

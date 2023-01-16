@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Types/Base.h"
+#include "PZL/Types/Int.h"
+#include "PZL/Types/Size.h"
 
 void* operator new(PZL::Type::Size Size);
 void* operator new[](PZL::Type::Size Size);

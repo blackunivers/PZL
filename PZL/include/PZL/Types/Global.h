@@ -1,13 +1,9 @@
 #pragma once
 
-#include "Base.h"
+#include "PZL/Types/Base.h"
 
 namespace PZL::Type
 {
-
-	inline const Error ERROR_UNKNOWN_OPERATION = "%s\n\tNo '%s' operator matches these operans. The Types of operands are: %s '%s' %s.";
-	inline const Error ERROR_UNKNOWN_OPERATOR = "%s\n\tUnknown operator: '%s' %s.";
-	inline const Error ERROR_UNDEFINED_IDENTIFIER = "%s\n\tThe identifier '%s' is not defined.";
 
 	inline const Bool TRUE = Bool(true);
 	inline const Bool FALSE = Bool(false);
@@ -20,8 +16,8 @@ namespace PZL::Type
 	inline const Int16 MIN_INT16 = (-32767i16 - 1);
 	inline const UInt16 MAX_UINT16 = 0xffffui16;
 
-	inline const Int32 MAX_INT32 = (-2147483647i32 - 1);
-	inline const Int32 MIN_INT32 = 2147483647i32;
+	inline const Int32 MAX_INT32 = 2147483647i32;
+	inline const Int32 MIN_INT32 = (-2147483647i32 - 1);
 	inline const UInt32 MAX_UINT32 = 0xffffffffui32;
 
 	inline const Int64 MAX_INT64 = 9223372036854775807i64;
